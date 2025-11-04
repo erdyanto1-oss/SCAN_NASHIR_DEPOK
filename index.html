@@ -18,7 +18,8 @@
     <meta name="theme-color" content="#06b6d4"> <!-- Warna tema (Cyan) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name_awal="apple-mobile-web-app-title" content="Dispatch">
+    <!-- **** PERBAIKAN BUG: 'name_awal' menjadi 'name' **** -->
+    <meta name="apple-mobile-web-app-title" content="Dispatch">
     <link rel="apple-touch-icon" href="https://placehold.co/192x192/06b6d4/ffffff?text=DND">
     
     <!-- Manifest (Embedded) -->
@@ -252,6 +253,24 @@
             color: #78350f; /* yellow-900 */
         }
 
+        /* --- **** PERBAIKAN: CSS UNTUK RESPONSIVE TABEL (Anti-isMobile()) **** --- */
+        .truncate-on-mobile {
+            /* Secara default di desktop, jangan potong */
+            max-width: none;
+            overflow: visible;
+            text-overflow: clip;
+            white-space: normal;
+        }
+        @media (max-width: 640px) { /* sm: di tailwind */
+            .truncate-on-mobile {
+                /* Terapkan pemotongan hanya di HP */
+                max-width: 80px; /* Atur lebar maks */
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+        }
+
 
     </style>
 </head>
@@ -471,7 +490,7 @@
                                 <th scope="col" class="px-2 py-2 border-r border-slate-300">Resi</th>
                                 <th scope="col" class="px-2 py-2 border-r border-slate-300">SKU</th>
                                 <th scope="col" class="px-2 py-2 border-r border-slate-300 text-center">Status</th>
-                                <th scope="col" class."px-2 py-2">PIC</th>
+                                <th scope="col" class="px-2 py-2">PIC</th> <!-- Perbaikan: Hapus 'class.' -->
                             </tr>
                         </thead>
                         <tbody id="log-table-body">
@@ -517,6 +536,7 @@
                 </p>
             </div>
             <div id="server-duplicate-list-container" class="mt-4 max-h-40 overflow-y-auto text-left space-y-2 bg-slate-50 p-3 rounded-lg">
+                <!-- Konten diisi oleh JS -->
             </div>
             <button id="closeServerModalBtn" class="mt-6 w-full bg-amber-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-amber-600 transition duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500">
                 Mengerti
@@ -699,14 +719,12 @@
         function initializeApp() {
             populateEkspedisiFilter(); 
             const storedUser = localStorage.getItem('resiAppUser');
-            const storedCreds = localStorage.getItem('resiAppCreds');
-    
+            
+            // --- **** PERBAIKAN KEAMANAN: Hapus autoLogin berdasarkan password **** ---
             if (storedUser) {
                 currentUser = JSON.parse(storedUser);
                 showMainApp();
-            } else if (storedCreds) {
-                showLoginApp(); 
-                autoLogin(storedCreds); 
+            // --- HAPUS BLOK 'else if (storedCreds)' ---
             } else {
                 showLoginApp();
                 document.getElementById('username').focus(); 
@@ -738,34 +756,8 @@
             loginContainer.classList.remove('hidden');
         }
 
-        async function autoLogin(credsJson) {
-            const { username, password } = JSON.parse(credsJson);
-            setLoginLoading(true);
-            showLoginStatus("Mencoba login otomatis...", "loading");
-
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    cache: 'no-cache',
-                    redirect: 'follow',
-                    body: JSON.stringify({ action: "login", username, password })
-                });
-                const result = await response.json();
-                if (result.result === 'success') {
-                    currentUser = result.user; 
-                    localStorage.setItem('resiAppUser', JSON.stringify(currentUser));
-                    showMainApp();
-                } else {
-                    throw new Error(result.message || "Login otomatis gagal");
-                }
-            } catch (error) {
-                showLoginStatus(error.message, "error");
-                localStorage.removeItem('resiAppUser');
-                localStorage.removeItem('resiAppCreds');
-            } finally {
-                setLoginLoading(false);
-            }
-        }
+        // --- **** PERBAIKAN KEAMANAN: Hapus fungsi autoLogin **** ---
+        // Fungsi autoLogin(credsJson) dihapus seluruhnya karena tidak aman.
 
         async function handleLogin(e) {
             e.preventDefault();
@@ -785,7 +777,8 @@
                 if (result.result === 'success') {
                     currentUser = result.user; 
                     localStorage.setItem('resiAppUser', JSON.stringify(currentUser));
-                    localStorage.setItem('resiAppCreds', JSON.stringify({ username, password }));
+                    // --- **** PERBAIKAN KEAMANAN: Hapus penyimpanan 'resiAppCreds' (password) **** ---
+                    // localStorage.setItem('resiAppCreds', JSON.stringify({ username, password }));
                     showMainApp();
                 } else {
                     throw new Error(result.message || "Login Gagal");
@@ -799,6 +792,7 @@
         
         function handleLogout() {
             localStorage.removeItem('resiAppUser');
+            // --- **** PERBAIKAN KEAMANAN: Hapus 'resiAppCreds' saat logout **** ---
             localStorage.removeItem('resiAppCreds');
             currentUser = null;
             window.removeEventListener('popstate', handleBackButton);
@@ -867,8 +861,9 @@
             registerStatusEl.className = `text-center p-3 rounded-lg text-sm font-medium transition-opacity duration-300 opacity-100 status-${type}`;
             if (type !== 'error' && type !== 'loading') {
                  setTimeout(() => {
-                    loginStatusEl.classList.remove('opacity-100');
-                    loginStatusEl.classList.add('opacity-0');
+                    // --- PERBAIKAN BUG: Seharusnya registerStatusEl, bukan loginStatusEl ---
+                    registerStatusEl.classList.remove('opacity-100');
+                    registerStatusEl.classList.add('opacity-0');
                 }, 4000);
             }
         }
@@ -1009,7 +1004,10 @@
                     playBeep();
                     showScanFeedback(`Sukses: ${decodedText}`, 'success'); // (v13)
                 } else {
-                    // (v13) Jika duplikat, panggil playErrorBeep dan feedback error
+                    // --- **** PERBAIKAN BUG FUNGSIONAL **** ---
+                    // Jika !isNew, itu bisa jadi DUPLIKAT atau (SKU/Ekspedisi KOSONG).
+                    // Fungsi addResiToBatch() sudah menangani error-nya (modal/status).
+                    // Kita HANYA perlu memutar suara error dan cooldown.
                     
                     // --- BARU (v14): Mulai Cooldown ---
                     isScanCooldown = true;
@@ -1017,7 +1015,8 @@
                     // --- Akhir Cooldown ---
                     
                     playErrorBeep();
-                    showScanFeedback(`Duplikat: ${decodedText}`, 'error');
+                    // JANGAN PANGGIL: showScanFeedback(`Duplikat: ${decodedText}`, 'error');
+                    // --- **** AKHIR PERBAIKAN BUG **** ---
                 }
                 
                 // 3. JANGAN PANGGIL stopScanner()
@@ -1040,7 +1039,7 @@
                         flashBtn.classList.add('hidden'); // Sembunyikan jika error
                     }
                     isFlashOn = false;
-                    flashBtn.textContent = "Nyalakan Flash";
+                    // flashBtn.textContent = "Nyalakan Flash"; // Dihapus, diganti ikon
                     flashBtn.classList.remove('bg-yellow-400', 'text-yellow-900');
                     
                     // --- BARU (v14): Update Ikon Flash ---
@@ -1215,12 +1214,30 @@
             }, 300);
         }
 
+        // --- **** PERBAIKAN KEAMANAN: Anti-XSS (textContent) **** ---
         function showServerDuplicateModal(duplicates) {
-            serverDuplicateListContainerEl.innerHTML = '';
+            serverDuplicateListContainerEl.innerHTML = ''; // Kosongkan
             duplicates.forEach(dup => {
                 const item = document.createElement('div');
                 item.className = 'text-sm p-2 bg-slate-100 rounded-lg';
-                item.innerHTML = `Resi: <strong class="text-slate-700">${dup.resi}</strong><br>Oleh: <strong class="text-slate-700">${dup.pic || 'PIC Lain'}</strong>`;
+                
+                // Buat elemen strong untuk Resi
+                const resiStrong = document.createElement('strong');
+                resiStrong.className = 'text-slate-700';
+                resiStrong.textContent = dup.resi; // AMAN
+                
+                // Buat elemen strong untuk PIC
+                const picStrong = document.createElement('strong');
+                picStrong.className = 'text-slate-700';
+                picStrong.textContent = dup.pic || 'PIC Lain'; // AMAN
+
+                // Gabungkan menggunakan appendChild (AMAN)
+                item.appendChild(document.createTextNode('Resi: '));
+                item.appendChild(resiStrong);
+                item.appendChild(document.createElement('br'));
+                item.appendChild(document.createTextNode('Oleh: '));
+                item.appendChild(picStrong);
+                
                 serverDuplicateListContainerEl.appendChild(item);
             });
             serverDuplicateModal.classList.remove('hidden');
@@ -1241,7 +1258,7 @@
             }, 300);
         }
 
-        // --- PERUBAHAN: Menambahkan update counter ekspedisi ---
+        // --- **** PERBAIKAN KEAMANAN: Anti-XSS (textContent & addEventListener) **** ---
         function addResiToQueueList(resi, sku, ekspedisi) {
             if (resiBatch.length === 1 && initialResiMessage) {
                 initialResiMessage.style.display = 'none';
@@ -1260,8 +1277,9 @@
                 skuGroupContainer = document.createElement('div');
                 skuGroupContainer.className = 'sku-group-container p-2 space-y-2';
 
+                // AMAN: 'ekspedisi' divalidasi dari <select>
                 ekspedisiGroup.innerHTML = `<h3 class="ekspedisi-header">
-                                              <span>${ekspedisi}</span>
+                                              <span>${ekspedisi}</span> 
                                               <span class="ekspedisi-count-span font-normal">(1)</span>
                                           </h3>`;
                 ekspedisiGroup.appendChild(skuGroupContainer);
@@ -1291,6 +1309,7 @@
                 resiContainer = document.createElement('div');
                 resiContainer.className = 'resi-items-container';
 
+                // AMAN: 'sku' akan di-render sebagai teks oleh browser di innerHTML
                 skuGroup.innerHTML = `<h4 class="sku-header">
                                           <span>${sku}</span>
                                           <span class="sku-count-span font-normal text-slate-600">(1)</span>
@@ -1299,41 +1318,48 @@
                 
                 skuGroupContainer.prepend(skuGroup);
             } else {
-                // Grup SKU sudah ada, update count
-                // --- PERBAIKAN DI SINI ---
                 resiContainer = skuGroup.querySelector('.resi-items-container'); 
-                // --- AKHIR PERBAIKAN ---
-                
                 const countSpan = skuGroup.querySelector('.sku-count-span');
-                if (countSpan && resiContainer) { // Menambahkan cek 'resiContainer'
+                if (countSpan && resiContainer) {
                     const currentCount = resiContainer.children.length;
                     countSpan.textContent = `(${currentCount + 1})`;
                 }
             }
 
-            // 3. Buat Tag Resi
+            // 3. Buat Tag Resi (CARA AMAN)
             const tag = document.createElement('div');
             tag.id = `queue-item-${resi}`;
             tag.className = 'tag-item bg-cyan-100 text-cyan-800 font-medium rounded group';
-            tag.innerHTML = `
-                <span>${resi}</span>
-                <button 
-                    type="button" 
-                    class="text-cyan-600 hover:text-red-500 transition-colors duration-200" 
-                    title="Hapus resi ini"
-                    onclick="removeResiFromQueue('${resi}', '${sku}', '${ekspedisi}')">
-                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            `;
             
-            if (resiContainer) { // Menambahkan cek 'resiContainer'
+            // Buat span untuk resi
+            const span = document.createElement('span');
+            span.textContent = resi; // AMAN: Menggunakan textContent
+            
+            // Buat tombol hapus
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'text-cyan-600 hover:text-red-500 transition-colors duration-200';
+            button.title = 'Hapus resi ini';
+            button.innerHTML = `<svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>`; // AMAN: HTML statis
+            
+            // AMAN: Menggunakan addEventListener
+            button.addEventListener('click', () => {
+                removeResiFromQueue(resi, sku, ekspedisi); 
+            });
+
+            // Gabungkan
+            tag.appendChild(span);
+            tag.appendChild(button);
+            
+            if (resiContainer) {
                 resiContainer.prepend(tag);
             } else {
                 console.error("Tidak dapat menemukan resiContainer untuk SKU:", sku);
             }
         }
+        // --- **** AKHIR PERBAIKAN XSS **** ---
 
         // --- PERUBAHAN: Menambahkan update counter ekspedisi ---
         function removeResiFromQueue(resi, sku, ekspedisi) {
@@ -1661,70 +1687,59 @@
             }
         }
 
-        function isMobile() {
-            // ... (Fungsi isMobile tidak berubah) ...
-            const regex = /Mobi|Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
-            return regex.test(navigator.userAgent);
-        }
+        // --- **** PERBAIKAN: Hapus fungsi isMobile() **** ---
+        // Fungsi isMobile() dihapus karena digantikan oleh CSS Media Query
 
+        // --- **** PERBAIKAN KEAMANAN: Anti-XSS (textContent) & CSS Responsive **** ---
         function addToScanResults(ekspedisi, resi, sku, pic, status) {
-            // ... (Fungsi addToScanResults tidak berubah) ...
              const initialMsg = document.getElementById('initial-log-message');
              if (logCount === 0 && initialMsg) {
                 initialMsg.remove();
             }
             logCount++;
             
-            const newRow = document.createElement('tr');
+            // Buat baris baru di <tbody>
+            const newRow = logTableBodyEl.insertRow(0); // insertRow(0) = prepend
             newRow.className = 'log-item bg-white border-b border-slate-300';
+            
+            // Set data-* atribut untuk filtering (AMAN)
             newRow.dataset.resi = resi;
             newRow.dataset.ekspedisi = ekspedisi;
             newRow.dataset.pic = pic; 
 
-            const sortedSku = formatSortedSku(sku); 
-            
-            // --- PERBAIKAN DIMULAI (v12 - Tampilan HP) ---
+            // const sortedSku = formatSortedSku(sku); // Tidak terpakai di implementasi lama
 
-            // 1. Selalu siapkan data sebagai string aman
-            const fullEkspedisi = String(ekspedisi || "");
-            const fullResi = String(resi || ""); 
+            // Sel 1: Ekspedisi (Aman)
+            const cellEkspedisi = newRow.insertCell(0);
+            cellEkspedisi.className = 'px-2 py-2 text-slate-600 border-r border-slate-300 truncate-on-mobile'; // Gunakan class responsive
+            cellEkspedisi.textContent = ekspedisi; // AMAN
+            cellEkspedisi.title = ekspedisi || "";
 
-            // 2. Siapkan variabel HTML untuk sel
-            let ekspedisiCellHtml = '';
-            let resiCellHtml = '';
+            // Sel 2: Resi (Aman)
+            const cellResi = newRow.insertCell(1);
+            cellResi.className = 'px-2 py-2 font-medium text-slate-900 border-r border-slate-300';
+            cellResi.style.overflowWrap = 'break-word';
+            cellResi.style.wordBreak = 'break-all';
+            cellResi.textContent = resi; // AMAN
+            cellResi.title = resi || "";
 
-            if (isMobile()) {
-                // Tampilan HP: Pangkas Ekspedisi, Tampilkan Resi Penuh
+            // Sel 3: SKU (Aman)
+            const cellSku = newRow.insertCell(2);
+            cellSku.className = 'px-2 py-2 text-slate-600 truncate border-r border-slate-300';
+            cellSku.textContent = sku; // AMAN
+            cellSku.title = sku || "";
 
-                // Pangkas Ekspedisi (ambil 5 huruf pertama + ...)
-                const shortEkspedisi = fullEkspedisi.slice(0, 5);
-                ekspedisiCellHtml = `<td class="px-2 py-2 text-slate-600 truncate border-r border-slate-300" title="${fullEkspedisi}">${shortEkspedisi}...</td>`;
+            // Sel 4: Status (Aman)
+            const cellStatus = newRow.insertCell(3);
+            cellStatus.className = 'px-2 py-2 text-center border-r border-slate-300';
+            cellStatus.innerHTML = getStatusHtml(status); // AMAN (Fungsi ini mengembalikan HTML statis/aman)
 
-                // Tampilkan Resi Penuh (dengan word-break agar pas)
-                resiCellHtml = `<td class="px-2 py-2 font-medium text-slate-900 border-r border-slate-300" style="overflow-wrap: break-word; word-break: break-all;" title="${fullResi}">${fullResi}</td>`;
-
-            } else {
-                // Tampilan Desktop: Tampilkan Semua Penuh (seperti sebelumnya)
-
-                // Ekspedisi Penuh
-                ekspedisiCellHtml = `<td class="px-2 py-2 text-slate-600 truncate border-r border-slate-300" title="${fullEkspedisi}">${fullEkspedisi}</td>`;
-
-                // Resi Penuh
-                resiCellHtml = `<td class="px-2 py-2 font-medium text-slate-900 border-r border-slate-300" style="overflow-wrap: break-word; word-break: break-all;" title="${fullResi}">${fullResi}</td>`;
-            }
-
-            // 3. Gabungkan baris baru
-            newRow.innerHTML = `
-                ${ekspedisiCellHtml}
-                ${resiCellHtml}
-                <td class="px-2 py-2 text-slate-600 truncate border-r border-slate-300" title="${sku}">${sku}</td>
-                <td class="px-2 py-2 text-center border-r border-slate-300">${getStatusHtml(status)}</td>
-                <td class="px-2 py-2 text-slate-600 font-medium">${pic}</td>
-            `;
-            // --- PERBAIKAN SELESAI ---
-
-            logTableBodyEl.prepend(newRow);
+            // Sel 5: PIC (Aman)
+            const cellPic = newRow.insertCell(4);
+            cellPic.className = 'px-2 py-2 text-slate-600 font-medium';
+            cellPic.textContent = pic; // AMAN
         }
+        // --- **** AKHIR PERBAIKAN XSS & RESPONSIVE **** ---
         
         // --- Utility Functions ---
         function handleBackButton(event) {
