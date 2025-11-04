@@ -1,0 +1,2128 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Input Resi | Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- **** PUSTAKA PDF BARU **** -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    
+    <!-- PWA Additions -->
+    <meta name="theme-color" content="#06b6d4"> <!-- Warna tema (Cyan) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name_awal="apple-mobile-web-app-title" content="Dispatch">
+    <link rel="apple-touch-icon" href="https://placehold.co/192x192/06b6d4/ffffff?text=DND">
+    
+    <!-- Manifest (Embedded) -->
+    <link rel="manifest" href="data:application/json,{
+      "name": "Dispatch Nashir Depok",
+      "short_name": "Dispatch",
+      "start_url": ".",
+      "display": "standalone",
+      "background_color": "#f0f9ff",
+      "theme_color": "#06b6d4",
+      "description": "Aplikasi Scan Resi Dispatch Gudang Depok.",
+      "icons": [
+        {
+          "src": "https://placehold.co/192x192/06b6d4/ffffff?text=DND",
+          "sizes": "192x192",
+          "type": "image/png"
+        },
+        {
+          "src": "https://placehold.co/512x512/06b6d4/ffffff?text=DND",
+          "sizes": "512x512",
+          "type": "image/png"
+        }
+      ]
+    }">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .log-item { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .status-success { color: #057A55; background-color: #D1FAE5; }
+        .status-error { color: #B91C1C; background-color: #FEE2E2; }
+        .status-loading { color: #1D4ED8; background-color: #DBEAFE; }
+        .tag-item { animation: popIn 0.3s ease-out; }
+        @keyframes popIn {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .tag-item-remove { animation: popOut 0.3s ease-out forwards; }
+        @keyframes popOut {
+            from { transform: scale(1); opacity: 1; }
+            to { transform: scale(0.5); opacity: 0; }
+        }
+        .modal-enter { animation: modalIn 0.3s forwards cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+        .modal-leave { animation: modalOut 0.3s forwards cubic-bezier(0.55, 0.085, 0.68, 0.53); }
+        @keyframes modalIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        @keyframes modalOut {
+            from { transform: scale(1); opacity: 1; }
+            to { transform: scale(0.9); opacity: 0; }
+        }
+        .rotating { animation: spin 1s linear infinite; }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        /* Style for scanner */
+        #reader__dashboard_section_csr { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #reader__dashboard_section_csr span { margin-bottom: 10px; }
+        #html5-qrcode-button-camera-permission,
+        #html5-qrcode-button-camera-stop,
+        #html5-qrcode-button-camera-start {
+            background-color: #06b6d4; color: white; padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer;
+        }
+        #reader__dashboard_section_csr select { background-color: white; border: 1px solid #ccc; padding: 5px; border-radius: 5px; }
+
+        /* --- CSS BARU UNTUK FILTER MULTI-SELECT --- */
+        .filter-dropdown { position: relative; }
+        .filter-dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 240px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            padding: 8px;
+            z-index: 10;
+            max-height: 300px;
+            overflow-y: auto;
+            right: 0;
+        }
+        .filter-dropdown-content label {
+            display: block;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .filter-dropdown-content label:hover { background-color: #f1f5f9; }
+        .filter-dropdown-content input { margin-right: 8px; }
+
+        /* --- CSS BARU UNTUK ANTRIAN GRUP --- */
+        .ekspedisi-group {
+            animation: fadeIn 0.5s ease-in-out;
+            border-radius: 0.5rem; /* rounded-lg */
+            overflow: hidden; /* Untuk merapikan rounded corner */
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); /* shadow-sm */
+        }
+        .ekspedisi-header {
+            background-color: #0891b2; /* cyan-700 */
+            color: white;
+            font-weight: 700; /* bold */
+            padding: 0.625rem; /* p-2.5 */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .sku-group-container {
+            /* Dihapus: bg-slate-100, karena #resi-list sudah punya bg */
+            padding: 0.5rem; /* p-2 */
+            space-y: 0.5rem; /* space-y-2 */
+        }
+
+        .sku-group {
+            /* Tidak perlu style khusus, hanya wrapper */
+        }
+        .sku-header {
+            background-color: #e2e8f0; /* slate-200 */
+            color: #334155; /* slate-700 */
+            font-weight: 600; /* semibold */
+            padding: 0.5rem; /* p-2 */
+            border-top-left-radius: 0.5rem; /* rounded-t-lg */
+            border-top-right-radius: 0.5rem;
+            font-size: 0.875rem; /* text-sm */
+            border-bottom: 1px solid #cbd5e1; /* border-slate-300 */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .resi-items-container {
+            background-color: #ffffff; /* bg-white */
+            padding: 0.5rem; /* p-2 */
+            border-bottom-left-radius: 0.5rem; /* rounded-b-lg */
+            border-bottom-right-radius: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .tag-item {
+            padding: 0.25rem 0.625rem;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+        .tag-item button {
+            opacity: 0;
+        }
+        .tag-item:hover button {
+            opacity: 1;
+        }
+
+        /* --- CSS BARU UNTUK SCANNER (v13) --- */
+        #scan-feedback {
+            /* Gaya dasar, akan diubah oleh JS */
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(-20px);
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem;
+            position: absolute; /* Mengambang di atas */
+            top: 1.5rem; /* 24px dari atas */
+            z-index: 10;
+        }
+        #scan-feedback.success {
+            background-color: #10B981; /* bg-green-600 */
+            color: white;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        #scan-feedback.error {
+            background-color: #EF4444; /* bg-red-500 */
+            color: white;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Laser scanner animation */
+        #reader {
+            position: relative;
+            overflow: hidden; /* Sembunyikan laser yg keluar */
+        }
+        .scanner-laser {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: #EF4444; /* Merah */
+            box-shadow: 0 0 10px #EF4444, 0 0 5px #EF4444;
+            opacity: 0.7;
+            animation: scan-laser 2.5s infinite linear;
+            z-index: 5; /* Di bawah UI, di atas video */
+        }
+        
+        @keyframes scan-laser {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(248px); } /* Sesuaikan 250px - height */
+            100% { transform: translateY(0); }
+        }
+
+        /* --- BARU (v14): Posisi Tombol Flash --- */
+        #flashBtn {
+            position: absolute;
+            top: 1.5rem; /* 24px */
+            left: 1.5rem; /* 24px */
+            z-index: 10;
+            /* Styling */
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            width: 44px; /* w-11 */
+            height: 44px; /* h-11 */
+            border-radius: 9999px; /* rounded-full */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        #flashBtn:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+        #flashBtn.flash-on {
+            background-color: #f59e0b; /* yellow-500 */
+            color: #78350f; /* yellow-900 */
+        }
+
+
+    </style>
+</head>
+<body class="bg-gradient-to-br from-cyan-50 to-blue-100 text-slate-800 flex items-center justify-center min-h-screen p-4">
+
+    <!-- Kontainer Login (Terlihat Awal) -->
+    <div id="loginContainer" class="w-full max-w-sm bg-white rounded-2xl shadow-2xl shadow-blue-200/50 p-8 space-y-6">
+        <!-- ... Konten login (tidak berubah) ... -->
+        <div class="text-center">
+            <svg class="mx-auto h-12 w-auto text-cyan-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5zM13.5 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5z" />
+            </svg>
+            <h1 class="text-3xl font-bold text-slate-900 mt-2">Dispatch Nashir Depok</h1>
+            <p class="text-slate-500 mt-2">Masukkan username dan password Anda.</p>
+        </div>
+        <div id="loginStatus" class="text-center p-3 rounded-lg text-sm font-medium transition-opacity duration-300 opacity-0"></div>
+        <form id="loginForm" class="space-y-4">
+            <div>
+                <label for="username" class="block text-sm font-medium text-slate-600 mb-1">Username</label>
+                <input type="text" id="username" name="username" required class="w-full bg-slate-100 border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition duration-200">
+            </div>
+            <div>
+                <label for="password" class="block text-sm font-medium text-slate-600 mb-1">Password</label>
+                <input type="password" id="password" name="password" required class="w-full bg-slate-100 border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition duration-200">
+            </div>
+            <button id="loginBtn" type="submit" class="w-full bg-cyan-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-cyan-600 transition duration-300 flex items-center justify-center gap-2">
+                <svg id="login-spinner" class="w-5 h-5 hidden rotating" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                <span id="login-text">Login</span>
+            </button>
+        </form>
+    </div>
+
+    <!-- Kontainer Aplikasi Utama (Tersembunyi Awal) -->
+    <div id="mainAppContainer" class="w-full max-w-2xl bg-white rounded-2xl shadow-2xl shadow-blue-200/50 p-6 md:p-8 space-y-6 hidden">
+        
+        <div class="flex justify-between items-center border-b border-slate-200 pb-4">
+            <!-- ... Header (tidak berubah) ... -->
+            <div class="text-center">
+                <h1 class="text-3xl font-bold text-slate-900">Scan Dispatch</h1>
+                <p class="text-slate-500 mt-1">Resi keluar dari Gudang Depok.</p>
+            </div>
+            <div class="text-right bg-slate-50 border border-slate-200 rounded-lg p-3">
+                <span class="block text-sm text-slate-500">Halo, <strong id="loggedInUsername" class="text-slate-800"></strong>!</span>
+                <button id="logoutBtn" class="block text-sm text-cyan-600 hover:text-cyan-800 font-medium">Logout</button>
+            </div>
+        </div>
+
+        <div class="flex flex-col md:grid md:grid-cols-2 gap-6">
+            <!-- Kolom Kiri: Input -->
+            <div class="space-y-6">
+                <!-- Langkah 1 -->
+                <div>
+                    <!-- ... Judul Langkah 1 (tidak berubah) ... -->
+                    <h2 class="text-lg font-semibold text-cyan-600 border-b border-slate-200 pb-2 mb-4 flex items-center gap-2">
+                        <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
+                        Langkah 1: Atur Batch
+                    </h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="ekspedisi" class="block text-sm font-medium text-slate-600 mb-1">Pilih Ekspedisi</label>
+                            <select id="ekspedisi" name="ekspedisi" required class="w-full bg-slate-100 border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition duration-200">
+                                 <option value="">-- Pilih Ekspedisi --</option>
+                                <option value="JNT TIKTOK">JNT TIKTOK</option>
+                                <option value="JNT REGULER">JNT REGULER</option>
+                                <option value="NINJA TIKTOK">NINJA TIKTOK</option>
+                                <option value="NINJA REG&MP">NINJA REG&MP</option>
+                                <option value="IDX REGULER">IDX REGULER</option>
+                                <option value="IDX MP">IDX MP</option>
+                                <option value="SPX EXPRESS">SPX EXPRESS</option>
+                                <option value="JNE REGULER">JNE REGULER</option>
+                                <option value="JNE MP">JNE MP</option>
+                                <option value="LION">LION</option>
+                                <option value="TIKI">TIKI</option>
+                                <option value="POS">POS</option>
+                                <option value="GOTO LOG">GOTO LOG</option>
+                                <option value="SHOPEE KILAT">SHOPEE KILAT</option>
+                                <option value="INSTAN & SAMEDAY">INSTAN & SAMEDAY</option>
+                                <option value="LAZADALEX">LAZADALEX</option>
+                                <option value="LAIN-LAIN">LAIN-LAIN</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="sku" class="block text-sm font-medium text-slate-600 mb-1">Input SKU</label>
+                            <input type="text" id="sku" name="sku" required placeholder="SKU untuk batch ini" class="w-full bg-slate-100 border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition duration-200">
+                        </div>
+                    </div>
+                </div>
+                 <!-- Langkah 2 -->
+                <div>
+                     <!-- ... Judul Langkah 2 (tidak berubah) ... -->
+                     <h2 class="text-lg font-semibold text-cyan-600 border-b border-slate-200 pb-2 mb-4 flex items-center gap-2">
+                        <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5zM13.5 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5z" /></svg>
+                        Langkah 2: Kumpulkan Resi
+                    </h2>
+                    <div>
+                        <label for="resi" class="block text-sm font-medium text-slate-600 mb-1">Scan Resi</label>
+                        <!-- PERUBAHAN: Mengganti <div> menjadi <form> -->
+                        <form id="resiForm" class="flex items-center gap-2">
+                           <input type="text" id="resi" name="resi" placeholder="Ketik atau Scan..." class="w-full bg-slate-50 border-2 border-dashed border-cyan-400 rounded-lg px-4 py-3 text-center text-lg focus:ring-2 focus:ring-cyan-500 focus:border-solid focus:border-cyan-500 outline-none transition duration-200" autocomplete="off">
+                           <button id="scanBtn" type="button" title="Pindai dengan Kamera" class="p-3 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition">
+                               <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.776 48.776 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.SAITAMw" /></svg>
+                           </button>
+                        </form> <!-- AKHIR PERUBAHAN -->
+                    </div>
+                </div>
+            </div>
+            <!-- Kolom Kanan: Antrian -->
+            <div class="flex flex-col">
+                <h2 class="text-lg font-semibold text-cyan-600 border-b border-slate-200 pb-2 mb-4 flex items-center gap-2">
+                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" /></svg>
+                    Daftar Antrian Resi (<span id="resi-count">0</span>)
+                </h2>
+                <div id="resi-list" class="bg-slate-100 rounded-lg overflow-y-auto h-72 space-y-2 p-2">
+                    <p id="initial-resi-message" class="text-slate-400 text-center italic p-4">Belum ada resi diantrikan.</p>
+                </div>
+                 <!-- Tombol Aksi -->
+                <div class="mt-4 space-y-2">
+                     <!-- ... Tombol (tidak berubah) ... -->
+                     <button id="submitBtn" type="button" class="w-full bg-cyan-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-cyan-600 transition duration-300 flex items-center justify-center gap-2 disabled:bg-slate-300 disabled:cursor-not-allowed">
+                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 8.25H7.5a2.25 2.25 0 00-2.25 2.25v9a2.25 2.25 0 002.25 2.25h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25H15m0-3l-3-3m0 0l-3 3m3-3v11.25" /></svg>
+                        Simpan & Validasi Semua
+                    </button>
+                    <button id="testVersionBtn" type="button" class="w-full bg-yellow-400 text-yellow-900 font-bold py-2 px-4 rounded-lg hover:bg-yellow-500 transition duration-300 hidden">
+                        Test Versi Skrip (v5)
+                    </button>
+                    <button id="resetBtn" type="button" class="w-full bg-slate-200 text-slate-600 font-bold py-2 px-4 rounded-lg hover:bg-slate-300 transition duration-300">
+                        Reset Batch
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel Admin (Tersembunyi by default) -->
+        <div id="adminPanel" class="space-y-4 pt-4 border-t border-slate-200 hidden">
+            <!-- ... Konten Panel Admin (tidak berubah) ... -->
+            <h2 class="text-lg font-semibold text-cyan-600 flex items-center gap-2">
+                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.03m-.001-.03l-.001.03m0 0l.001.03m0 0l.001.03m0 0l.001.03m-3.742 0l.001.03m-.001-.03l-.001.03m0 0l.001.03m0 0l.001.03m0 0l.001.03M12 19.235M12 19.235M12 19.235M12 6c0-1.108.892-2 2-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM12 6c0-1.108-.892-2-2-2H8a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V6zM12 6c0-1.108.892-2 2-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM12 6c0-1.108-.892-2-2-2H8a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V6z" /></svg>
+                Panel Admin: Daftarkan Pengguna Baru
+            </h2>
+            <div id="registerStatus" class="text-center p-3 rounded-lg text-sm font-medium transition-opacity duration-300 opacity-0"></div>
+            <form id="registerForm" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                    <label for="newUsername" class="block text-sm font-medium text-slate-600 mb-1">Username Baru</label>
+                    <input type="text" id="newUsername" required class="w-full bg-slate-100 border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-cyan-500">
+                </div>
+                <div>
+                    <label for="newPassword" class="block text-sm font-medium text-slate-600 mb-1">Password Baru</label>
+                    <input type="password" id="newPassword" required class="w-full bg-slate-100 border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-cyan-500">
+                </div>
+                <div>
+                    <label for="newRole" class="block text-sm font-medium text-slate-600 mb-1">Role</label>
+                    <select id="newRole" required class="w-full bg-slate-100 border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-cyan-500">
+                        <option value="User">User (PIC)</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                </div>
+                <button id="registerBtn" type="submit" class="w-full sm:col-span-3 bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-cyan-700 transition duration-300">
+                    Daftarkan Pengguna
+                </button>
+            </form>
+        </div>
+
+        <!-- Status & Hasil -->
+        <div class="space-y-4 pt-4 border-t border-slate-200">
+            <!-- ... Konten Status & Hasil (tidak berubah) ... -->
+            <div id="status" class="text-center p-3 rounded-lg text-sm font-medium transition-opacity duration-300 opacity-0"></div>
+            <div>
+                <div class="flex flex-col sm:flex-row justify-between items-center mb-2 gap-2">
+                    <h3 class="text-md font-semibold text-slate-700">Hasil Scan:</h3>
+                    <div class="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                         <select id="filter-pic-select" class="w-full sm:w-auto bg-slate-100 text-slate-800 border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all duration-200">
+                            <option value="semua">Semua PIC</option>
+                         </select>
+                         <div class="filter-dropdown w-full sm:w-auto">
+                            <button id="filter-ekspedisi-btn" type="button" class="w-full sm:w-auto bg-slate-100 text-slate-800 border-slate-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all duration-200 flex items-center justify-between">
+                                <span id="filter-ekspedisi-text">Ekspedisi (Semua)</span>
+                                <svg class="w-4 h-4 ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                            </button>
+                            <div id="filter-ekspedisi-dropdown" class="filter-dropdown-content">
+                            </div>
+                         </div>
+                        <button id="refreshBtn" title="Perbarui status dari Google Sheet" class="bg-gradient-to-br from-cyan-400 to-blue-500 text-white p-2 rounded-full shadow-md hover:from-cyan-500 hover:to-blue-600 hover:shadow-lg transform active:scale-95 transition-all duration-300 disabled:opacity-50 disabled:cursor-wait">
+                            <svg id="refresh-icon" class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0011.667 0l3.181-3.183m-4.991-2.695v4.992h-4.992" />
+                            </svg>
+                        </button>
+                        <button id="downloadPdfBtn" title="Download PDF Handover (Muat data dulu)" class="bg-green-500 text-white p-2 rounded-full shadow-md hover:bg-green-600 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div id="status-summary" class="hidden grid grid-cols-2 sm:grid-cols-4 gap-3 mb-2 text-center">
+                    <div class="bg-blue-100 text-blue-800 p-3 rounded-lg shadow-sm">
+                        <span class="text-xs font-medium uppercase tracking-wider">Total</span>
+                        <strong id="summary-total" class="text-xs font-bold ml-2">0</strong>
+                    </div>
+                    <div class="bg-green-100 text-green-800 p-3 rounded-lg shadow-sm">
+                        <span class="text-xs font-medium uppercase tracking-wider">Benar</span>
+                        <strong id="summary-benar" class="text-xs font-bold ml-2">0</strong>
+                    </div>
+                    <div class="bg-red-100 text-red-800 p-3 rounded-lg shadow-sm">
+                        <span class="text-xs font-medium uppercase tracking-wider">Salah</span>
+                        <strong id="summary-salah" class="text-xs font-bold ml-2">0</strong>
+                    </div>
+                    <div class="bg-amber-100 text-amber-800 p-3 rounded-lg shadow-sm">
+                        <span class="text-xs font-medium uppercase tracking-wider">Blm Input</span>
+                        <strong id="summary-belum" class="text-xs font-bold ml-2">0</strong>
+                    </div>
+                </div>
+                <div class="bg-slate-100 rounded-lg h-56 overflow-y-auto">
+                    <table class="w-full text-left" style="font-size: 0.7rem; line-height: 1rem;">
+                        <thead class="text-slate-600 uppercase bg-slate-200 sticky top-0">
+                            <tr>
+                                <th scope="col" class="px-2 py-2 border-r border-slate-300">Ekspedisi</th>
+                                <th scope="col" class="px-2 py-2 border-r border-slate-300">Resi</th>
+                                <th scope="col" class="px-2 py-2 border-r border-slate-300">SKU</th>
+                                <th scope="col" class="px-2 py-2 border-r border-slate-300 text-center">Status</th>
+                                <th scope="col" class."px-2 py-2">PIC</th>
+                            </tr>
+                        </thead>
+                        <tbody id="log-table-body">
+                            <tr id="initial-log-message">
+                                <td colspan="5" class="text-center text-slate-400 italic py-4">Belum ada data yang divalidasi.</td>
+                            </tr>
+                            <tr id="filter-no-results" class="hidden">
+                                <td colspan="5" class="text-center text-slate-500 font-medium py-4">Tidak ada hasil untuk filter yang dipilih.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Duplicate Resi (LOKAL) -->
+    <!-- PERUBAHAN: Menambahkan z-60 -->
+    <div id="duplicateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-60 hidden">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 text-center transform transition-all scale-95 opacity-0" id="modal-content">
+            <svg class="mx-auto h-16 w-16 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+            <h2 class="text-2xl font-bold text-slate-800 mt-4">Resi Dobel Terdeteksi</h2>
+            <p class="text-slate-500 mt-2">Nomor resi <strong id="duplicate-resi-value" class="text-slate-700"></strong> sudah ada dalam antrian dan tidak akan ditambahkan lagi.</p>
+            <button id="closeModalBtn" class="mt-6 w-full bg-red-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-600 transition duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                Mengerti
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL BARU: Modal for Duplicate Resi (SERVER) -->
+    <!-- PERUBAHAN: Menambahkan z-60 -->
+    <div id="serverDuplicateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-60 hidden">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 transform transition-all scale-95 opacity-0" id="server-modal-content">
+            <div class="text-center">
+                <svg class="mx-auto h-16 w-16 text-amber-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+                <h2 class="text-2xl font-bold text-slate-800 mt-4">Resi Duplikat Ditemukan</h2>
+                <p class="text-slate-500 mt-2">
+                    Resi berikut sudah ada di server dan tidak diproses ulang:
+                </p>
+            </div>
+            <div id="server-duplicate-list-container" class="mt-4 max-h-40 overflow-y-auto text-left space-y-2 bg-slate-50 p-3 rounded-lg">
+            </div>
+            <button id="closeServerModalBtn" class="mt-6 w-full bg-amber-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-amber-600 transition duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500">
+                Mengerti
+            </button>
+        </div>
+    </div>
+
+    <!-- Scanner Modal -->
+    <!-- PERUBAHAN: Menambahkan elemen #scan-feedback -->
+    <div id="scanner-container" class="fixed inset-0 bg-black z-50 hidden flex-col items-center justify-center p-4">
+        <!-- Feedback Element (v13) -->
+        <div id="scan-feedback" class="">
+            <!-- Pesan akan diisi oleh JavaScript -->
+        </div>
+
+        <!-- Tombol Flash (v14) - Pindah ke sini -->
+        <button id="flashBtn" class="hidden" title="Toggle Flash">
+            <svg id="flash-icon-off" class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+            </svg>
+            <svg id="flash-icon-on" class="w-6 h-6 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.125v2.25m-4.47 4.47-1.591 1.591M1.125 10.5h2.25m4.47 4.47 1.591 1.591M10.5 19.875v2.25m4.47-4.47 1.591-1.591M19.875 10.5h2.25m-4.47-4.47-1.591-1.591M10.5 5.625a4.875 4.875 0 1 0 0 9.75 4.875 4.875 0 0 0 0-9.75z" />
+            </svg>
+        </button>
+        
+        <div id="reader" class="w-full max-w-lg">
+            <!-- Laser ditambahkan oleh CSS -->
+            <div class="scanner-laser"></div>
+        </div>
+        
+        <!-- Tombol Aksi Scanner (v13) -->
+        <div class="flex items-center gap-4 mt-4">
+            <!-- Tombol Flash dipindah ke atas -->
+            <button id="closeScannerBtn" class="bg-red-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-red-600 transition">
+                Tutup
+            </button>
+        </div>
+    </div>
+
+
+    <script>
+        // --- Inisialisasi jsPDF ---
+        const { jsPDF } = window.jspdf;
+        
+        // !!! URL SCRIPT GOOGLE ANDA !!!
+        // Ganti dengan URL Google Apps Script Anda yang sudah di-deploy
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzLuJ3MJEN39_Bfzrq5eSA5p09s5mXGs8fYfh8fF7-f7K2zSZxCE_vU77vEynJx2Gz6/exec"; 
+
+        // --- Global State ---
+        let currentUser = null;
+        let resiBatch = []; 
+        let logCount = 0;
+        let html5QrCode;
+        let allPicNames = new Set();
+        let modalCloseTimer = null; 
+        let audioCtx; // --- BARU: Untuk suara beep ---
+        let feedbackTimer = null; // --- BARU: Timer untuk notifikasi scan ---
+        let isFlashOn = false; // --- BARU (v13): Status flash ---
+        let isScanCooldown = false; // --- BARU (v14): Jeda scan ---
+
+        // --- DOM Elements ---
+        const loginContainer = document.getElementById('loginContainer');
+        const loginForm = document.getElementById('loginForm');
+        // ... (DOM Elements lainnya tidak berubah) ...
+        const loginStatusEl = document.getElementById('loginStatus');
+        const loginSpinner = document.getElementById('login-spinner');
+        const loginText = document.getElementById('login-text');
+        const mainAppContainer = document.getElementById('mainAppContainer');
+        const loggedInUsernameEl = document.getElementById('loggedInUsername');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const ekspedisiEl = document.getElementById('ekspedisi');
+        const skuEl = document.getElementById('sku');
+        const resiEl = document.getElementById('resi');
+        const scanBtn = document.getElementById('scanBtn');
+        const resiListEl = document.getElementById('resi-list');
+        const initialResiMessage = document.getElementById('initial-resi-message');
+        const resiCountEl = document.getElementById('resi-count');
+        const submitBtn = document.getElementById('submitBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const adminPanel = document.getElementById('adminPanel');
+        const registerForm = document.getElementById('registerForm');
+        const registerStatusEl = document.getElementById('registerStatus');
+        const newUsernameEl = document.getElementById('newUsername');
+        const newPasswordEl = document.getElementById('newPassword');
+        const newRoleEl = document.getElementById('newRole');
+        const statusEl = document.getElementById('status');
+        const logTableBodyEl = document.getElementById('log-table-body');
+        const initialLogMessage = document.getElementById('initial-log-message');
+        const filterNoResults = document.getElementById('filter-no-results');
+        const statusSummaryEl = document.getElementById('status-summary');
+        const summaryTotalEl = document.getElementById('summary-total');
+        const summaryBenarEl = document.getElementById('summary-benar');
+        const summarySalahEl = document.getElementById('summary-salah');
+        const summaryBelumEl = document.getElementById('summary-belum');
+        const scannerContainer = document.getElementById('scanner-container');
+        const closeScannerBtn = document.getElementById('closeScannerBtn');
+        const duplicateModal = document.getElementById('duplicateModal');
+        const modalContent = document.getElementById('modal-content');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const duplicateResiValueEl = document.getElementById('duplicate-resi-value');
+        const serverDuplicateModal = document.getElementById('serverDuplicateModal');
+        const serverModalContent = document.getElementById('server-modal-content');
+        const closeServerModalBtn = document.getElementById('closeServerModalBtn');
+        const serverDuplicateListContainerEl = document.getElementById('server-duplicate-list-container');
+        const filterPicSelectEl = document.getElementById('filter-pic-select');
+        const filterEkspedisiBtn = document.getElementById('filter-ekspedisi-btn');
+        const filterEkspedisiText = document.getElementById('filter-ekspedisi-text');
+        const filterEkspedisiDropdown = document.getElementById('filter-ekspedisi-dropdown');
+        const testVersionBtn = document.getElementById('testVersionBtn');
+        const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const refreshIcon = document.getElementById('refresh-icon');
+        const scanFeedbackEl = document.getElementById('scan-feedback'); // --- BARU ---
+        const resiForm = document.getElementById('resiForm'); // --- BARU ---
+        const flashBtn = document.getElementById('flashBtn'); // --- BARU (v13) ---
+        const flashIconOn = document.getElementById('flash-icon-on'); // --- BARU (v14) ---
+        const flashIconOff = document.getElementById('flash-icon-off'); // --- BARU (v14) ---
+
+
+        // --- Event Listeners ---
+        // ... (Listeners tidak berubah) ...
+        loginForm.addEventListener('submit', handleLogin);
+        logoutBtn.addEventListener('click', handleLogout);
+        skuEl.addEventListener('input', () => { skuEl.value = skuEl.value.toUpperCase(); });
+        skuEl.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); resiEl.focus(); } });
+        ekspedisiEl.addEventListener('change', () => skuEl.focus());
+        
+        // --- PERUBAHAN: Mengganti 'keydown' di resiEl dengan 'submit' di resiForm ---
+        resiForm.addEventListener('submit', (e) => {
+            e.preventDefault(); // Mencegah reload halaman
+            addResiFromInput();
+        });
+
+        submitBtn.addEventListener('click', submitBatchData);
+        resetBtn.addEventListener('click', () => resetBatch(true));
+        refreshBtn.addEventListener('click', fetchDailyScans);
+        scanBtn.addEventListener('click', startScanner);
+        registerForm.addEventListener('submit', handleRegisterUser);
+        closeScannerBtn.addEventListener('click', stopScanner);
+        flashBtn.addEventListener('click', () => toggleFlash(false)); // --- BARU (v13) ---
+        closeModalBtn.addEventListener('click', hideDuplicateModal);
+        duplicateModal.addEventListener('click', (e) => {
+            if (e.target === duplicateModal) { hideDuplicateModal(); }
+        });
+        closeServerModalBtn.addEventListener('click', hideServerDuplicateModal);
+        serverDuplicateModal.addEventListener('click', (e) => {
+            if (e.target === serverDuplicateModal) { hideServerDuplicateModal(); }
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                if (!duplicateModal.classList.contains('hidden')) {
+                    e.preventDefault();
+                    hideDuplicateModal();
+                }
+                if (!serverDuplicateModal.classList.contains('hidden')) {
+                    e.preventDefault();
+                    hideServerDuplicateModal();
+                }
+            }
+        });
+        filterPicSelectEl.addEventListener('change', () => {
+            applyFilters();
+            downloadPdfBtn.disabled = true;
+            downloadPdfBtn.title = "Muat data dulu dengan tombol refresh";
+        });
+        filterEkspedisiBtn.addEventListener('click', () => {
+            const isHidden = filterEkspedisiDropdown.style.display === 'none' || filterEkspedisiDropdown.style.display === '';
+            filterEkspedisiDropdown.style.display = isHidden ? 'block' : 'none';
+        });
+        document.addEventListener('click', (e) => {
+            if (!filterEkspedisiBtn.contains(e.target) && !filterEkspedisiDropdown.contains(e.target)) {
+                filterEkspedisiDropdown.style.display = 'none';
+            }
+        });
+        testVersionBtn.addEventListener('click', handleTestVersion);
+        downloadPdfBtn.addEventListener('click', getHandoverNumberAndGeneratePDF);
+
+
+        // --- App Initialization ---
+        function initializeApp() {
+            populateEkspedisiFilter(); 
+            const storedUser = localStorage.getItem('resiAppUser');
+            const storedCreds = localStorage.getItem('resiAppCreds');
+    
+            if (storedUser) {
+                currentUser = JSON.parse(storedUser);
+                showMainApp();
+            } else if (storedCreds) {
+                showLoginApp(); 
+                autoLogin(storedCreds); 
+            } else {
+                showLoginApp();
+                document.getElementById('username').focus(); 
+            }
+        }
+
+        // --- Auth Functions ---
+        // ... (Fungsi Auth tidak berubah) ...
+        function showMainApp() {
+            loginContainer.classList.add('hidden');
+            mainAppContainer.classList.remove('hidden');
+            loggedInUsernameEl.textContent = currentUser.username;
+
+            if (currentUser.role === 'Admin') {
+                adminPanel.classList.remove('hidden');
+            } else {
+                adminPanel.classList.add('hidden');
+            }
+            ekspedisiEl.focus();
+            
+            history.pushState(null, '', location.href);
+            window.addEventListener('popstate', handleBackButton);
+
+            updatePicFilterOptions();
+        }
+
+        function showLoginApp() {
+            mainAppContainer.classList.add('hidden');
+            loginContainer.classList.remove('hidden');
+        }
+
+        async function autoLogin(credsJson) {
+            const { username, password } = JSON.parse(credsJson);
+            setLoginLoading(true);
+            showLoginStatus("Mencoba login otomatis...", "loading");
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    cache: 'no-cache',
+                    redirect: 'follow',
+                    body: JSON.stringify({ action: "login", username, password })
+                });
+                const result = await response.json();
+                if (result.result === 'success') {
+                    currentUser = result.user; 
+                    localStorage.setItem('resiAppUser', JSON.stringify(currentUser));
+                    showMainApp();
+                } else {
+                    throw new Error(result.message || "Login otomatis gagal");
+                }
+            } catch (error) {
+                showLoginStatus(error.message, "error");
+                localStorage.removeItem('resiAppUser');
+                localStorage.removeItem('resiAppCreds');
+            } finally {
+                setLoginLoading(false);
+            }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value.trim(); 
+            const password = document.getElementById('password').value.trim(); 
+            setLoginLoading(true);
+            showLoginStatus("Sedang login...", "loading");
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    cache: 'no-cache',
+                    redirect: 'follow',
+                    body: JSON.stringify({ action: "login", username, password })
+                });
+                const result = await response.json();
+                if (result.result === 'success') {
+                    currentUser = result.user; 
+                    localStorage.setItem('resiAppUser', JSON.stringify(currentUser));
+                    localStorage.setItem('resiAppCreds', JSON.stringify({ username, password }));
+                    showMainApp();
+                } else {
+                    throw new Error(result.message || "Login Gagal");
+                }
+            } catch (error) {
+                showLoginStatus(error.message, "error");
+            } finally {
+                setLoginLoading(false);
+            }
+        }
+        
+        function handleLogout() {
+            localStorage.removeItem('resiAppUser');
+            localStorage.removeItem('resiAppCreds');
+            currentUser = null;
+            window.removeEventListener('popstate', handleBackButton);
+            showLoginApp();
+            document.getElementById('username').focus();
+            allPicNames.clear();
+            updatePicFilterOptions();
+        }
+        
+        function setLoginLoading(isLoading) {
+             if (isLoading) {
+                loginSpinner.classList.remove('hidden');
+                loginText.textContent = "Loading...";
+                loginBtn.disabled = true;
+            } else {
+                loginSpinner.classList.add('hidden');
+                loginText.textContent = "Login";
+                loginBtn.disabled = false;
+            }
+        }
+        
+        function showLoginStatus(message, type) {
+            loginStatusEl.textContent = message;
+            loginStatusEl.className = `text-center p-3 rounded-lg text-sm font-medium transition-opacity duration-300 opacity-100 status-${type}`;
+            if (type !== 'error' && type !== 'loading') {
+                 setTimeout(() => {
+                    loginStatusEl.classList.remove('opacity-100');
+                    loginStatusEl.classList.add('opacity-0');
+                }, 4000);
+            }
+        }
+        
+        async function handleRegisterUser(e) {
+            e.preventDefault();
+            const newUsername = newUsernameEl.value;
+            const newPassword = newPasswordEl.value;
+            const newRole = newRoleEl.value;
+            showRegisterStatus("Mendaftarkan...", "loading");
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    cache: 'no-cache',
+                    redirect: 'follow',
+                    body: JSON.stringify({ 
+                        action: "registerUser", 
+                        newUsername, 
+                        newPassword, 
+                        newRole 
+                    })
+                });
+                const result = await response.json();
+                if (result.result === 'success') {
+                    showRegisterStatus(result.message, "success");
+                    registerForm.reset();
+                } else {
+                    throw new Error(result.message || "Gagal mendaftarkan");
+                }
+            } catch (error) {
+                showRegisterStatus(error.message, "error");
+            }
+        }
+
+        function showRegisterStatus(message, type) {
+            registerStatusEl.textContent = message;
+            registerStatusEl.className = `text-center p-3 rounded-lg text-sm font-medium transition-opacity duration-300 opacity-100 status-${type}`;
+            if (type !== 'error' && type !== 'loading') {
+                 setTimeout(() => {
+                    loginStatusEl.classList.remove('opacity-100');
+                    loginStatusEl.classList.add('opacity-0');
+                }, 4000);
+            }
+        }
+
+
+        // --- Core App Functions ---
+        // ... (handleTestVersion, updateStatusSummary tidak berubah) ...
+        async function handleTestVersion() {
+            showStatus("Menguji versi skrip di server...", "loading");
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    cache: 'no-cache',
+                    redirect: 'follow',
+                    body: JSON.stringify({ action: "getVersion" })
+                });
+                if (!response.ok) throw new Error(`Server error: ${response.statusText}`);
+                
+                const result = await response.json();
+                if (result.result === 'success') {
+                    showStatus(result.message, "success"); 
+                } else {
+                    throw new Error(result.message || "Tes Gagal, skrip tidak merespons."); 
+                }
+            } catch (error) {
+                console.error("Test Version Error:", error);
+                showStatus(`Error: ${error.message}`, "error");
+            }
+        }
+
+        function updateStatusSummary() {
+            const rows = logTableBodyEl.querySelectorAll('tr[data-resi]');
+            let total = 0;
+            let benar = 0;
+            let salah = 0;
+            let belum = 0;
+
+            rows.forEach(row => {
+                if (!row.classList.contains('hidden')) { 
+                    total++;
+                    const statusCell = row.querySelector('td:nth-child(4) span'); 
+                    if (statusCell) {
+                        const statusText = statusCell.textContent;
+                        if (statusText === 'Benar') benar++;
+                        else if (statusText === 'Salah') salah++;
+                        else if (statusText === 'Blm Input') belum++;
+                    }
+                }
+            });
+
+            summaryTotalEl.textContent = total;
+            summaryBenarEl.textContent = benar;
+            summarySalahEl.textContent = salah;
+            summaryBelumEl.textContent = belum;
+
+            if (logCount > 0 && total > 0) { 
+                statusSummaryEl.classList.remove('hidden');
+            } else {
+                statusSummaryEl.classList.add('hidden');
+            }
+        }
+
+
+        function addResiFromInput() {
+            const resiValue = resiEl.value.trim();
+            if (resiValue) {
+                const isNew = addResiToBatch(resiValue); // Cek apakah resi baru
+                if (isNew) {
+                    playBeep(); // Bunyikan beep hanya jika baru
+                }
+            }
+            resiEl.value = '';
+            resiEl.focus(); 
+        }
+        
+        // --- PERUBAHAN: Fungsi ini sekarang me-return boolean ---
+        function addResiToBatch(resiValue) {
+            const currentEkspedisi = ekspedisiEl.value; 
+            const currentSku = skuEl.value.trim();
+            
+            if (!currentEkspedisi || !currentSku) {
+                showStatus("Pilih Ekspedisi dan isi SKU terlebih dahulu!", "error");
+                if (!currentEkspedisi) {
+                    ekspedisiEl.focus();
+                } else {
+                    skuEl.focus();
+                }
+                playErrorBeep();
+                return false; // Gagal
+            }
+            
+            if (resiBatch.some(item => item.resi === resiValue)) {
+                showDuplicateModal(resiValue);
+                playErrorBeep();
+                return false; // Duplikat
+            }
+            
+            resiBatch.push({ ekspedisi: currentEkspedisi, sku: currentSku, resi: resiValue }); 
+            addResiToQueueList(resiValue, currentSku, currentEkspedisi); 
+            updateResiCount();
+            
+            return true; // Sukses
+        }
+        
+        // --- PERUBAHAN BESAR PADA SCANNER ---
+        function startScanner() {
+            // Inisialisasi AudioContext saat tombol ditekan (kebijakan browser)
+            if (!audioCtx) {
+                try {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.error("Web Audio API tidak didukung browser ini.");
+                }
+            }
+
+            scannerContainer.classList.remove('hidden');
+            scannerContainer.classList.add('flex');
+            
+            html5QrCode = new Html5Qrcode("reader");
+            
+            const qrCodeSuccessCallback = (decodedText, decodedResult) => {
+                // --- BARU (v14): Tambahkan Cooldown ---
+                if (isScanCooldown) {
+                    return; // Abaikan scan jika sedang cooldown
+                }
+                // --- Akhir Cooldown ---
+
+                // 1. Panggil addResiToBatch (ini akan memvalidasi duplikat & memutar error beep)
+                const isNew = addResiToBatch(decodedText); 
+                
+                // 2. Beri feedback HANYA jika resi baru (bukan duplikat)
+                if (isNew) {
+                    // --- BARU (v14): Mulai Cooldown ---
+                    isScanCooldown = true;
+                    setTimeout(() => { isScanCooldown = false; }, 1000); // Jeda 1 detik
+                    // --- Akhir Cooldown ---
+
+                    playBeep();
+                    showScanFeedback(`Sukses: ${decodedText}`, 'success'); // (v13)
+                } else {
+                    // (v13) Jika duplikat, panggil playErrorBeep dan feedback error
+                    
+                    // --- BARU (v14): Mulai Cooldown ---
+                    isScanCooldown = true;
+                    setTimeout(() => { isScanCooldown = false; }, 1000); // Jeda 1 detik
+                    // --- Akhir Cooldown ---
+                    
+                    playErrorBeep();
+                    showScanFeedback(`Duplikat: ${decodedText}`, 'error');
+                }
+                
+                // 3. JANGAN PANGGIL stopScanner()
+            };
+
+            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+            
+            html5QrCode.start({ facingMode: "environment" }, config, qrCodeSuccessCallback)
+                .then(() => {
+                    // (v13) Cek kapabilitas flash setelah kamera mulai
+                    try {
+                        const track = html5QrCode.getRunningTrack();
+                        const capabilities = track.getCapabilities();
+                        if (capabilities.torch) {
+                            flashBtn.classList.remove('hidden'); // Tampilkan tombol jika ada flash
+                        } else {
+                            flashBtn.classList.add('hidden'); // Sembunyikan jika tidak ada
+                        }
+                    } catch (e) {
+                        flashBtn.classList.add('hidden'); // Sembunyikan jika error
+                    }
+                    isFlashOn = false;
+                    flashBtn.textContent = "Nyalakan Flash";
+                    flashBtn.classList.remove('bg-yellow-400', 'text-yellow-900');
+                    
+                    // --- BARU (v14): Update Ikon Flash ---
+                    flashIconOn.classList.add('hidden');
+                    flashIconOff.classList.remove('hidden');
+                    flashBtn.classList.remove('flash-on');
+                })
+                .catch(err => {
+                    console.error("Gagal memulai scanner", err);
+                    showStatus("Tidak dapat mengakses kamera.", "error");
+                    stopScanner();
+                });
+        }
+
+        // --- FUNGSI BARU UNTUK FEEDBACK ---
+
+        // (v13) Mengganti suara beep menjadi lebih halus/singkat (ping)
+        function playBeep() {
+            if (!audioCtx) return; 
+            try {
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(1200, audioCtx.currentTime); // Frekuensi E6 (ping)
+                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime); // Volume
+                
+                oscillator.start(audioCtx.currentTime);
+                oscillator.stop(audioCtx.currentTime + 0.1); // Durasi 100ms
+            } catch (e) {
+                console.error("Gagal memutar suara beep:", e);
+            }
+        }
+
+        // (v13) Mengganti suara error menjadi suara "Failed"
+        function playErrorBeep() {
+            if ('speechSynthesis' in window) {
+                try {
+                    // --- PERUBAHAN (v14): Ganti suara ke "Mpun Mas" ---
+                    const utterance = new SpeechSynthesisUtterance('Mpun Mas');
+                    utterance.lang = 'id-ID'; // Gunakan bahasa Indonesia
+                    utterance.rate = 1.0;
+                    utterance.pitch = 1.0;
+                    window.speechSynthesis.speak(utterance);
+                } catch (e) {
+                    console.error("Gagal memutar suara 'Mpun Mas':", e);
+                }
+            } else {
+                console.warn("Speech Synthesis tidak didukung browser ini.");
+                // Fallback jika tidak didukung (meskipun jarang)
+                if (!audioCtx) return;
+                try {
+                    const oscillator = audioCtx.createOscillator();
+                    const gainNode = audioCtx.createGain();
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+                    
+                    oscillator.type = 'sawtooth';
+                    oscillator.frequency.setValueAtTime(160, audioCtx.currentTime);
+                    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + 0.2);
+                } catch (e) {
+                    console.error("Gagal memutar suara error fallback:", e);
+                }
+            }
+        }
+
+        // (v13) Memodifikasi feedback untuk menerima 'tipe' (success/error)
+        function showScanFeedback(message, type) {
+            if (feedbackTimer) {
+                clearTimeout(feedbackTimer); // Hapus timer lama jika ada
+            }
+            
+            scanFeedbackEl.textContent = message;
+            // Hapus kelas lama, tambahkan kelas baru
+            scanFeedbackEl.className = '';
+            scanFeedbackEl.classList.add(type); // 'success' or 'error'
+            
+            feedbackTimer = setTimeout(() => {
+                scanFeedbackEl.className = ''; // Sembunyikan lagi
+            }, 2000); // Tampilkan pesan selama 2 detik
+        }
+
+        // --- AKHIR FUNGSI FEEDBACK ---
+
+
+        function stopScanner() {
+            if (html5QrCode && html5QrCode.isScanning) {
+                // (v13) Pastikan flash mati saat scanner ditutup
+                if (isFlashOn) {
+                    toggleFlash(true); // Memaksa flash mati
+                }
+                html5QrCode.stop().then(() => {
+                    console.log("Scanner dihentikan.");
+                }).catch(err => {
+                    console.error("Gagal menghentikan scanner.", err);
+                });
+            }
+            scannerContainer.classList.add('hidden');
+            scannerContainer.classList.remove('flex');
+        }
+
+        // --- BARU (v13): Fungsi untuk mengontrol Flash ---
+        async function toggleFlash(forceOff = false) {
+            if (!html5QrCode || !html5QrCode.isScanning) return;
+
+            if (forceOff) {
+                isFlashOn = false;
+            } else {
+                isFlashOn = !isFlashOn;
+            }
+
+            try {
+                const track = html5QrCode.getRunningTrack();
+                const capabilities = track.getCapabilities();
+
+                if (!capabilities.torch) {
+                    // Seharusnya tombol sudah disembunyikan, tapi ini pengaman
+                    console.warn("Perangkat ini tidak punya flash.");
+                    flashBtn.classList.add('hidden');
+                    return;
+                }
+
+                await track.applyConstraints({
+                    advanced: [{ torch: isFlashOn }]
+                });
+
+                // Update UI Tombol
+                if (isFlashOn) {
+                    // --- PERUBAHAN (v14): Gunakan Class dan Ikon ---
+                    flashBtn.classList.add('flash-on');
+                    flashIconOn.classList.remove('hidden');
+                    flashIconOff.classList.add('hidden');
+                } else {
+                    // --- PERUBAHAN (v14): Gunakan Class dan Ikon ---
+                    flashBtn.classList.remove('flash-on');
+                    flashIconOn.classList.add('hidden');
+                    flashIconOff.classList.remove('hidden');
+                }
+
+            } catch (err) {
+                console.error("Gagal toggle flash:", err);
+                isFlashOn = false; // Reset status jika gagal
+                // --- PERUBAHAN (v14): Gunakan Class dan Ikon ---
+                flashBtn.classList.remove('flash-on');
+                flashIconOn.classList.add('hidden');
+                flashIconOff.classList.remove('hidden');
+            }
+        }
+
+
+        function showDuplicateModal(resi) {
+            duplicateResiValueEl.textContent = resi;
+            duplicateModal.classList.remove('hidden');
+            modalContent.classList.remove('modal-leave');
+            modalContent.classList.add('modal-enter');
+            if (modalCloseTimer) clearTimeout(modalCloseTimer);
+            modalCloseTimer = setTimeout(hideDuplicateModal, 5000);
+        }
+
+        function hideDuplicateModal() {
+            if (modalCloseTimer) clearTimeout(modalCloseTimer);
+            modalContent.classList.remove('modal-enter');
+            modalContent.classList.add('modal-leave');
+            setTimeout(() => {
+                duplicateModal.classList.add('hidden');
+                // resiEl.focus(); // Tidak relevan jika scanner masih nyala
+            }, 300);
+        }
+
+        function showServerDuplicateModal(duplicates) {
+            serverDuplicateListContainerEl.innerHTML = '';
+            duplicates.forEach(dup => {
+                const item = document.createElement('div');
+                item.className = 'text-sm p-2 bg-slate-100 rounded-lg';
+                item.innerHTML = `Resi: <strong class="text-slate-700">${dup.resi}</strong><br>Oleh: <strong class="text-slate-700">${dup.pic || 'PIC Lain'}</strong>`;
+                serverDuplicateListContainerEl.appendChild(item);
+            });
+            serverDuplicateModal.classList.remove('hidden');
+            serverModalContent.classList.remove('modal-leave');
+            serverModalContent.classList.add('modal-enter');
+            if (modalCloseTimer) clearTimeout(modalCloseTimer);
+            modalCloseTimer = setTimeout(hideServerDuplicateModal, 5000);
+        }
+
+        function hideServerDuplicateModal() {
+            if (modalCloseTimer) clearTimeout(modalCloseTimer);
+            serverModalContent.classList.remove('modal-enter');
+            serverModalContent.classList.add('modal-leave');
+            setTimeout(() => {
+                serverDuplicateModal.classList.add('hidden');
+                serverDuplicateListContainerEl.innerHTML = ''; 
+                resiEl.focus();
+            }, 300);
+        }
+
+        // --- PERUBAHAN: Menambahkan update counter ekspedisi ---
+        function addResiToQueueList(resi, sku, ekspedisi) {
+            if (resiBatch.length === 1 && initialResiMessage) {
+                initialResiMessage.style.display = 'none';
+            }
+
+            // 1. Cari Grup EKSPEDISI
+            let ekspedisiGroup = resiListEl.querySelector(`.ekspedisi-group[data-ekspedisi="${ekspedisi}"]`);
+            let skuGroupContainer;
+
+            if (!ekspedisiGroup) {
+                // Buat grup ekspedisi baru
+                ekspedisiGroup = document.createElement('div');
+                ekspedisiGroup.className = 'ekspedisi-group';
+                ekspedisiGroup.dataset.ekspedisi = ekspedisi;
+
+                skuGroupContainer = document.createElement('div');
+                skuGroupContainer.className = 'sku-group-container p-2 space-y-2';
+
+                ekspedisiGroup.innerHTML = `<h3 class="ekspedisi-header">
+                                              <span>${ekspedisi}</span>
+                                              <span class="ekspedisi-count-span font-normal">(1)</span>
+                                          </h3>`;
+                ekspedisiGroup.appendChild(skuGroupContainer);
+                
+                resiListEl.prepend(ekspedisiGroup);
+            } else {
+                skuGroupContainer = ekspedisiGroup.querySelector('.sku-group-container');
+                
+                // Update hitungan ekspedisi yg sudah ada
+                const ekspedisiCountSpan = ekspedisiGroup.querySelector('.ekspedisi-count-span');
+                if (ekspedisiCountSpan) {
+                    const currentCount = ekspedisiGroup.querySelectorAll('.tag-item').length;
+                    ekspedisiCountSpan.textContent = `(${currentCount + 1})`;
+                }
+            }
+
+            // 2. Cari Grup SKU di dalam Grup Ekspedisi
+            let skuGroup = skuGroupContainer.querySelector(`.sku-group[data-sku="${sku}"]`);
+            let resiContainer;
+
+            if (!skuGroup) {
+                // Buat grup SKU baru
+                skuGroup = document.createElement('div');
+                skuGroup.className = 'sku-group';
+                skuGroup.dataset.sku = sku;
+
+                resiContainer = document.createElement('div');
+                resiContainer.className = 'resi-items-container';
+
+                skuGroup.innerHTML = `<h4 class="sku-header">
+                                          <span>${sku}</span>
+                                          <span class="sku-count-span font-normal text-slate-600">(1)</span>
+                                      </h4>`;
+                skuGroup.appendChild(resiContainer);
+                
+                skuGroupContainer.prepend(skuGroup);
+            } else {
+                // Grup SKU sudah ada, update count
+                // --- PERBAIKAN DI SINI ---
+                resiContainer = skuGroup.querySelector('.resi-items-container'); 
+                // --- AKHIR PERBAIKAN ---
+                
+                const countSpan = skuGroup.querySelector('.sku-count-span');
+                if (countSpan && resiContainer) { // Menambahkan cek 'resiContainer'
+                    const currentCount = resiContainer.children.length;
+                    countSpan.textContent = `(${currentCount + 1})`;
+                }
+            }
+
+            // 3. Buat Tag Resi
+            const tag = document.createElement('div');
+            tag.id = `queue-item-${resi}`;
+            tag.className = 'tag-item bg-cyan-100 text-cyan-800 font-medium rounded group';
+            tag.innerHTML = `
+                <span>${resi}</span>
+                <button 
+                    type="button" 
+                    class="text-cyan-600 hover:text-red-500 transition-colors duration-200" 
+                    title="Hapus resi ini"
+                    onclick="removeResiFromQueue('${resi}', '${sku}', '${ekspedisi}')">
+                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            `;
+            
+            if (resiContainer) { // Menambahkan cek 'resiContainer'
+                resiContainer.prepend(tag);
+            } else {
+                console.error("Tidak dapat menemukan resiContainer untuk SKU:", sku);
+            }
+        }
+
+        // --- PERUBAHAN: Menambahkan update counter ekspedisi ---
+        function removeResiFromQueue(resi, sku, ekspedisi) {
+            // 1. Hapus dari state
+            resiBatch = resiBatch.filter(item => item.resi !== resi);
+            
+            // 2. Hapus tag resi dari DOM
+            const itemToRemove = document.getElementById(`queue-item-${resi}`);
+            if (itemToRemove) {
+                itemToRemove.classList.add('tag-item-remove'); 
+                setTimeout(() => {
+                    itemToRemove.remove(); // 1. Hapus tag
+
+                    // 3. Cari grup ekspedisi
+                    const ekspedisiGroup = resiListEl.querySelector(`.ekspedisi-group[data-ekspedisi="${ekspedisi}"]`);
+                    if (!ekspedisiGroup) {
+                        // Failsafe, update total count dan exit
+                        updateResiCount();
+                        if (resiBatch.length === 0 && initialResiMessage) initialResiMessage.style.display = 'block';
+                        return; 
+                    }
+
+                    // 4. Logika SKU
+                    const skuGroup = ekspedisiGroup.querySelector(`.sku-group[data-sku="${sku}"]`);
+                    if (skuGroup) {
+                        const resiContainer = skuGroup.querySelector('.resi-items-container');
+                        const skuCountSpan = skuGroup.querySelector('.sku-count-span');
+
+                        if (resiContainer && resiContainer.children.length === 0) {
+                            skuGroup.remove(); // Hapus grup SKU jika kosong
+                        } else if (resiContainer && skuCountSpan) {
+                            skuCountSpan.textContent = `(${resiContainer.children.length})`; // Update hitungan SKU
+                        }
+                    }
+
+                    // 5. Logika Ekspedisi (SETELAH SKU dihapus jika perlu)
+                    const skuGroupContainer = ekspedisiGroup.querySelector('.sku-group-container');
+                    const ekspedisiCountSpan = ekspedisiGroup.querySelector('.ekspedisi-count-span');
+
+                    if (skuGroupContainer && skuGroupContainer.children.length === 0) {
+                        ekspedisiGroup.remove(); // Hapus grup Ekspedisi jika kosong
+                    } else if (skuGroupContainer && ekspedisiCountSpan) {
+                        // Update hitungan total Ekspedisi
+                        const currentTotalCount = ekspedisiGroup.querySelectorAll('.tag-item').length;
+                        ekspedisiCountSpan.textContent = `(${currentTotalCount})`;
+                    }
+                    
+                    // 6. Update Hitungan Total
+                    updateResiCount();
+                    if (resiBatch.length === 0 && initialResiMessage) {
+                        initialResiMessage.style.display = 'block';
+                    }
+
+                }, 300); 
+            }
+        }
+
+        function updateResiCount() {
+            resiCountEl.textContent = resiBatch.length;
+        }
+
+        function lockInputs() { }
+        function unlockInputs() { }
+
+        function resetBatch(fullReset = false) {
+            resiBatch = [];
+            resiListEl.innerHTML = '';
+            resiListEl.append(initialResiMessage);
+            if(initialResiMessage) initialResiMessage.style.display = 'block';
+            updateResiCount();
+            
+            skuEl.value = ''; 
+            ekspedisiEl.value = ''; 
+            
+            ekspedisiEl.focus(); 
+            if (fullReset) {
+                showStatus("Batch dibersihkan seluruhnya.", "success");
+            }
+        }
+
+        async function submitBatchData() {
+            // ... (Fungsi submitBatchData tidak berubah dari versi sebelumnya SAMPAI...) ...
+            if (resiBatch.length === 0) {
+                showStatus("Tidak ada resi dalam antrian untuk disimpan.", "error");
+                return;
+            }
+            if (!currentUser || !currentUser.username) {
+                showStatus("Sesi Anda berakhir. Harap login kembali.", "error");
+                handleLogout();
+                return;
+            }
+            
+            showStatus(`Mengirim ${resiBatch.length} resi...`, "loading");
+            submitBtn.disabled = true;
+
+            const pic = currentUser.username;
+
+            const submissionGroups = resiBatch.reduce((acc, item) => {
+                const key = `${item.ekspedisi}|${item.sku}`;
+                if (!acc[key]) {
+                    acc[key] = {
+                        ekspedisi: item.ekspedisi,
+                        sku: item.sku,
+                        resiList: []
+                    };
+                }
+                acc[key].resiList.push(item.resi);
+                return acc;
+            }, {});
+
+            const submissionJobs = Object.values(submissionGroups);
+            const submissionPromises = [];
+
+            for (const job of submissionJobs) {
+                const { ekspedisi, sku, resiList } = job;
+                
+                const dataToSend = {
+                    action: 'submitBatch',
+                    ekspedisi: ekspedisi,
+                    sku: sku,
+                    resiList: resiList,
+                    pic: pic
+                };
+
+                const promise = fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    cache: 'no-cache',
+                    redirect: 'follow',
+                    body: JSON.stringify(dataToSend)
+                }).then(res => res.json())
+                  .then(response => ({ ...response, originalJob: job }));
+
+                submissionPromises.push(promise);
+            }
+
+            try {
+                const results = await Promise.all(submissionPromises);
+
+                let totalSuccess = 0;
+                let totalDuplicates = 0;
+                let allDuplicatesDetails = [];
+                let failedJobs = [];
+
+                results.forEach(response => {
+                    // Pastikan response dan response.originalJob ada
+                    if (!response || !response.originalJob) {
+                        console.error("Menerima respons tidak lengkap dari server:", response);
+                        failedJobs.push("Batch tidak dikenal (error respons server)");
+                        return; // Lanjut ke hasil berikutnya
+                    }
+
+                    const { ekspedisi, sku } = response.originalJob; 
+
+                    if (response.result === 'success') {
+                        const processed = response.processed || [];
+                        const duplicates = response.duplicates || [];
+
+                        // PENTING: Ini adalah data yang statusnya mungkin "Salah"
+                        // karena formula Kolom E belum selesai.
+                        processed.forEach(item => {
+                             addToScanResults(ekspedisi, item.resi, sku, pic, item.status);
+                             totalSuccess++;
+                        });
+
+                        if (duplicates.length > 0) {
+                            totalDuplicates += duplicates.length;
+                            allDuplicatesDetails.push(...duplicates);
+                        }
+                    } else {
+                        console.error(`Gagal submit batch for ${ekspedisi}/${sku}:`, response.message);
+                        failedJobs.push(`${ekspedisi}/${sku}`);
+                    }
+                });
+
+                if (allDuplicatesDetails.length > 0) {
+                    showServerDuplicateModal(allDuplicatesDetails);
+                }
+                
+                let statusMessage = `Selesai: ${totalSuccess} resi berhasil diproses, ${totalDuplicates} duplikat ditemukan.`;
+                let statusType = totalDuplicates > 0 ? "error" : "success";
+
+                if (failedJobs.length > 0) {
+                    statusMessage += ` Gagal memproses batch: ${failedJobs.join(', ')}`;
+                    statusType = "error";
+                }
+
+                showStatus(statusMessage, statusType);
+                
+                resetBatch(true); // <-- Ini membersihkan antrian (kiri)
+                // applyFilters(); // <-- Dihapus, karena fetchDailyScans sudah memanggilnya
+                
+                // --- PERUBAHAN BARU (v15): Validasi Ulang Otomatis ---
+                // Setelah submit, kita tahu status awal (dari 'processed.forEach' di atas)
+                // mungkin salah karena menunggu formula server (Kolom E).
+                // Kita panggil fetchDailyScans() untuk langsung mengambil status
+                // yang sudah divalidasi server.
+
+                showStatus("Memvalidasi ulang status dari server...", "loading");
+
+                // Kosongkan log saat ini agar tidak duplikat saat fetch
+                // Ini akan menghapus data "Salah" yang tadi sempat muncul
+                logTableBodyEl.innerHTML = '';
+                logCount = 0;
+                logTableBodyEl.innerHTML = `<tr id="initial-log-message"><td colspan="5" class="text-center text-slate-400 italic py-4">Memuat ulang data...</td></tr>`;
+                
+                // Panggil fungsi refresh (Perbarui Status) secara otomatis
+                await fetchDailyScans();
+                
+                // fetchDailyScans() akan memanggil applyFilters() dan 
+                // showStatus("Data berhasil dimuat!", "success") dengan sendirinya.
+                
+                // --- PERUBAHAN BARU (Sesuai Request 4-Nov): Filter otomatis ke PIC ---
+                // Setelah data dimuat, setel filter ke "My Scan"
+                filterPicSelectEl.value = 'my-scan';
+                // Terapkan filter lagi untuk menampilkan hasil
+                applyFilters();
+                // Berikan status kustom yang baru
+                showStatus(`Scan Anda berhasil divalidasi & difilter.`, "success");
+                // --- AKHIR PERUBAHAN BARU ---
+                
+                // --- AKHIR PERUBAHAN (v15) ---
+
+
+            } catch (error) {
+                console.error('Error submitting batches:', error);
+                showStatus(`Gagal mengirim semua batch: ${error.message}`, "error");
+            } finally {
+                submitBtn.disabled = false;
+            }
+        }
+
+        async function fetchDailyScans() {
+            // ... (Fungsi fetchDailyScans tidak berubah) ...
+            showStatus(`Memuat data scan hari ini untuk semua ekspedisi...`, "loading");
+            refreshBtn.disabled = true;
+            downloadPdfBtn.disabled = true;
+            downloadPdfBtn.title = "Muat data dulu dengan tombol refresh";
+            refreshIcon.classList.add('rotating');
+            logTableBodyEl.innerHTML = '';
+            logCount = 0;
+            filterNoResults.classList.add('hidden');
+            statusSummaryEl.classList.add('hidden'); 
+            allPicNames.clear(); 
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    cache: 'no-cache',
+                    redirect: 'follow',
+                    body: JSON.stringify({ 
+                        action: 'fetchDailyScans', 
+                        ekspedisi: 'semua' 
+                    })
+                });
+
+                if (!response.ok) throw new Error(`Server merespons dengan status ${response.status}`);
+                const result = await response.json();
+
+                if (result.result === 'success' && Array.isArray(result.scans)) {
+                    if (result.scans.length === 0) {
+                        logTableBodyEl.innerHTML = `<tr id="initial-log-message"><td colspan="5" class="text-center text-slate-400 italic py-4">Belum ada data scan hari ini.</td></tr>`;
+                    } else {
+                        result.scans.forEach(item => {
+                            addToScanResults(item.ekspedisi, item.resi, item.sku, item.pic, item.status);
+                            if(item.pic) allPicNames.add(item.pic); 
+                        });
+                    }
+                    showStatus("Data berhasil dimuat!", "success");
+                    updatePicFilterOptions(); 
+                    applyFilters();
+                    
+                    downloadPdfBtn.disabled = false;
+                    downloadPdfBtn.title = "Download PDF Handover";
+
+                } else {
+                    throw new Error(result.message || 'Gagal memuat data scan.');
+                }
+            } catch (error) {
+                console.error('Error fetching daily scans:', error);
+                showStatus(`Gagal memuat: ${error.message}`, "error");
+                logTableBodyEl.innerHTML = `<tr id="initial-log-message"><td colspan="5" class="text-center text-slate-400 italic py-4">Gagal memuat data. Coba lagi.</td></tr>`;
+            } finally {
+                refreshBtn.disabled = false;
+                refreshIcon.classList.remove('rotating');
+            }
+        }
+        
+        function showStatus(message, type) {
+            // ... (Fungsi showStatus tidak berubah) ...
+            statusEl.textContent = message;
+            statusEl.className = `text-center p-3 rounded-lg text-sm font-medium transition-opacity duration-300 opacity-100 status-${type}`;
+            if (type !== 'error' && type !== 'loading') {
+                 setTimeout(() => {
+                    statusEl.classList.remove('opacity-100');
+                    statusEl.classList.add('opacity-0');
+                }, 4000);
+            }
+        }
+        
+        function getStatusHtml(status) {
+            // ... (Fungsi getStatusHtml tidak berubah) ...
+            switch(status) {
+                case "Benar": return `<span class="font-semibold text-green-600">Benar</span>`;
+                case "Salah": return `<span class="font-semibold text-red-600">Salah</span>`;
+                case "Belum Ada Inputan": return `<span class="font-semibold text-amber-600">Blm Input</span>`;
+                case "Tidak Diterima": return `<span class="font-semibold text-red-600">Error</span>`;
+                default: return `<span class="font-semibold text-slate-500">${status || "N/A"}</span>`;
+            }
+        }
+        
+        function formatSortedSku(sku) {
+            // ... (Fungsi formatSortedSku tidak berubah) ...
+            if (!sku || typeof sku !== 'string') {
+                return '-';
+            }
+            try {
+                const components = sku.match(/[A-Z]+[0-9]*/g);
+                if (!components) {
+                    return sku; 
+                }
+                return components.sort().join('');
+            } catch (e) {
+                console.error("Error sorting SKU:", e);
+                return sku;
+            }
+        }
+
+        function isMobile() {
+            // ... (Fungsi isMobile tidak berubah) ...
+            const regex = /Mobi|Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
+            return regex.test(navigator.userAgent);
+        }
+
+        function addToScanResults(ekspedisi, resi, sku, pic, status) {
+            // ... (Fungsi addToScanResults tidak berubah) ...
+             const initialMsg = document.getElementById('initial-log-message');
+             if (logCount === 0 && initialMsg) {
+                initialMsg.remove();
+            }
+            logCount++;
+            
+            const newRow = document.createElement('tr');
+            newRow.className = 'log-item bg-white border-b border-slate-300';
+            newRow.dataset.resi = resi;
+            newRow.dataset.ekspedisi = ekspedisi;
+            newRow.dataset.pic = pic; 
+
+            const sortedSku = formatSortedSku(sku); 
+            
+            // --- PERBAIKAN DIMULAI (v12 - Tampilan HP) ---
+
+            // 1. Selalu siapkan data sebagai string aman
+            const fullEkspedisi = String(ekspedisi || "");
+            const fullResi = String(resi || ""); 
+
+            // 2. Siapkan variabel HTML untuk sel
+            let ekspedisiCellHtml = '';
+            let resiCellHtml = '';
+
+            if (isMobile()) {
+                // Tampilan HP: Pangkas Ekspedisi, Tampilkan Resi Penuh
+
+                // Pangkas Ekspedisi (ambil 5 huruf pertama + ...)
+                const shortEkspedisi = fullEkspedisi.slice(0, 5);
+                ekspedisiCellHtml = `<td class="px-2 py-2 text-slate-600 truncate border-r border-slate-300" title="${fullEkspedisi}">${shortEkspedisi}...</td>`;
+
+                // Tampilkan Resi Penuh (dengan word-break agar pas)
+                resiCellHtml = `<td class="px-2 py-2 font-medium text-slate-900 border-r border-slate-300" style="overflow-wrap: break-word; word-break: break-all;" title="${fullResi}">${fullResi}</td>`;
+
+            } else {
+                // Tampilan Desktop: Tampilkan Semua Penuh (seperti sebelumnya)
+
+                // Ekspedisi Penuh
+                ekspedisiCellHtml = `<td class="px-2 py-2 text-slate-600 truncate border-r border-slate-300" title="${fullEkspedisi}">${fullEkspedisi}</td>`;
+
+                // Resi Penuh
+                resiCellHtml = `<td class="px-2 py-2 font-medium text-slate-900 border-r border-slate-300" style="overflow-wrap: break-word; word-break: break-all;" title="${fullResi}">${fullResi}</td>`;
+            }
+
+            // 3. Gabungkan baris baru
+            newRow.innerHTML = `
+                ${ekspedisiCellHtml}
+                ${resiCellHtml}
+                <td class="px-2 py-2 text-slate-600 truncate border-r border-slate-300" title="${sku}">${sku}</td>
+                <td class="px-2 py-2 text-center border-r border-slate-300">${getStatusHtml(status)}</td>
+                <td class="px-2 py-2 text-slate-600 font-medium">${pic}</td>
+            `;
+            // --- PERBAIKAN SELESAI ---
+
+            logTableBodyEl.prepend(newRow);
+        }
+        
+        // --- Utility Functions ---
+        function handleBackButton(event) {
+            // ... (Fungsi handleBackButton tidak berubah) ...
+            resiEl.focus();
+            history.pushState(null, '', location.href);
+        }
+
+        // --- FUNGSI Logika Filter ---
+        function populateEkspedisiFilter() {
+            // ... (Fungsi populateEkspedisiFilter tidak berubah) ...
+            const dropdown = filterEkspedisiDropdown;
+            dropdown.innerHTML = ''; 
+            const listEkspedisi = [
+                "Semua Ekspedisi", "JNT TIKTOK", "JNT REGULER", "NINJA TIKTOK", "NINJA REG&MP",
+                "IDX REGULER", "IDX MP", "SPX EXPRESS", "JNE REGULER", "JNE MP",
+                "LION", "TIKI", "POS", "GOTO LOG", "SHOPEE KILAT", "INSTAN & SAMEDAY", 
+                "LAZADALEX",
+                "LAIN-LAIN"
+            ];
+            
+            listEkspedisi.forEach(nama => {
+                const label = document.createElement('label');
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = nama;
+                checkbox.id = `chk-${nama.replace(/\s|&/g, '-')}`;
+                if (nama === 'Semua Ekspedisi') {
+                    checkbox.checked = true;
+                }
+                
+                label.htmlFor = checkbox.id;
+                label.appendChild(checkbox);
+                label.appendChild(document.createTextNode(nama));
+                
+                checkbox.addEventListener('change', handleEkspedisiCheckboxChange);
+                dropdown.appendChild(label);
+            });
+        }
+
+        function handleEkspedisiCheckboxChange(e) {
+            // ... (Fungsi handleEkspedisiCheckboxChange tidak berubah) ...
+            const changedCheckbox = e.target;
+            const checkboxes = filterEkspedisiDropdown.querySelectorAll('input[type="checkbox"]');
+            
+            if (changedCheckbox.value === 'Semua Ekspedisi' && changedCheckbox.checked) {
+                checkboxes.forEach(cb => {
+                    if (cb !== changedCheckbox) cb.checked = false;
+                });
+            } else if (changedCheckbox.value !== 'Semua Ekspedisi' && changedCheckbox.checked) {
+                const semuaCheckbox = filterEkspedisiDropdown.querySelector('input[value="Semua Ekspedisi"]');
+                if (semuaCheckbox) semuaCheckbox.checked = false;
+            }
+
+            const checkedCount = filterEkspedisiDropdown.querySelectorAll('input[type="checkbox"]:checked').length;
+            if (checkedCount === 0 || (checkedCount === 1 && filterEkspedisiDropdown.querySelector('input[value="Semua Ekspedisi"]:checked'))) {
+                filterEkspedisiText.textContent = 'Ekspedisi (Semua)';
+                if (checkedCount === 0) {
+                     const semuaCheckbox = filterEkspedisiDropdown.querySelector('input[value="Semua Ekspedisi"]');
+                     if (semuaCheckbox) semuaCheckbox.checked = true;
+                }
+            } else {
+                filterEkspedisiText.textContent = `Ekspedisi (${checkedCount})`;
+            }
+            
+            applyFilters();
+            downloadPdfBtn.disabled = true;
+            downloadPdfBtn.title = "Muat data dulu dengan tombol refresh";
+        }
+        
+        function updatePicFilterOptions() {
+            // ... (Fungsi updatePicFilterOptions tidak berubah) ...
+            const selectedValue = filterPicSelectEl.value; 
+            
+            const oldOptions = filterPicSelectEl.querySelectorAll('option[data-pic-name]');
+            oldOptions.forEach(opt => opt.remove());
+
+            if (!filterPicSelectEl.querySelector('option[value="my-scan"]')) {
+                const myScanOption = document.createElement('option');
+                myScanOption.value = 'my-scan';
+                myScanOption.textContent = `My Scan (${currentUser.username})`;
+                filterPicSelectEl.appendChild(myScanOption);
+            }
+
+            allPicNames.forEach(name => {
+                if (name !== currentUser.username) {
+                    const picOption = document.createElement('option');
+                    picOption.value = name;
+                    picOption.textContent = name;
+                    picOption.dataset.picName = "true"; 
+                    filterPicSelectEl.appendChild(picOption);
+                }
+            });
+
+            filterPicSelectEl.value = selectedValue || 'semua';
+        }
+
+        function applyFilters() {
+            // ... (Fungsi applyFilters tidak berubah) ...
+            const selectedPic = filterPicSelectEl.value;
+            
+            const checkedEkspedisiCheckboxes = filterEkspedisiDropdown.querySelectorAll('input[type="checkbox"]:checked');
+            let selectedEkspedisi = [];
+            checkedEkspedisiCheckboxes.forEach(cb => {
+                selectedEkspedisi.push(cb.value);
+            });
+            const filterSemuaEkspedisi = selectedEkspedisi.includes('Semua Ekspedisi') || selectedEkspedisi.length === 0;
+
+            const rows = logTableBodyEl.querySelectorAll('tr[data-resi]');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const ekspedisiBaris = row.dataset.ekspedisi;
+                const picBaris = row.dataset.pic;
+
+                const matchesEkspedisi = filterSemuaEkspedisi || selectedEkspedisi.includes(ekspedisiBaris);
+                
+                let matchesPic = false;
+                if (selectedPic === 'semua') {
+                    matchesPic = true;
+                } else if (selectedPic === 'my-scan') {
+                    matchesPic = (picBaris === currentUser.username);
+                } else {
+                    matchesPic = (picBaris === selectedPic);
+                }
+                
+                if (matchesEkspedisi && matchesPic) {
+                    row.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    row.classList.add('hidden');
+                }
+            });
+
+            if (logCount > 0 && visibleCount === 0) {
+                filterNoResults.classList.remove('hidden');
+            } else {
+                filterNoResults.classList.add('hidden');
+            }
+            updateStatusSummary(); 
+        }
+
+        // --- **** FUNGSI-FUNGSI BARU UNTUK PDF (v6) **** ---
+        async function getHandoverNumberAndGeneratePDF() {
+            // ... (Fungsi PDF tidak berubah) ...
+            const { resiList, ekspedisiList, totalPaket } = getFilteredDataForPDF();
+            if (totalPaket === 0) {
+                showStatus("Tidak ada data untuk di-download. Silakan muat data scan.", "error");
+                return;
+            }
+            showStatus("Membuat Nomor HO...", "loading");
+            downloadPdfBtn.disabled = true;
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    cache: 'no-cache',
+                    redirect: 'follow',
+                    body: JSON.stringify({ action: 'getNewHandoverNumber' })
+                });
+
+                if (!response.ok) throw new Error("Gagal terhubung ke server untuk No. HO.");
+                
+                const result = await response.json();
+                
+                if (result.result === 'success' && result.hoNumber) {
+                    showStatus("Membuat PDF...", "loading");
+                    await generatePDF(result.hoNumber, resiList, ekspedisiList, totalPaket);
+                    showStatus("PDF berhasil dibuat!", "success");
+                } else {
+                    throw new Error(result.message || "Gagal mendapatkan No. HO dari server.");
+                }
+            } catch (error) {
+                console.error("PDF Generation Error:", error);
+                showStatus(`Gagal membuat PDF: ${error.message}`, "error");
+            }
+        }
+
+        function getFilteredDataForPDF() {
+            // ... (Fungsi PDF tidak berubah) ...
+            let resiList = [];
+            let ekspedisiSet = new Set();
+            const visibleRows = logTableBodyEl.querySelectorAll('tr[data-resi]:not(.hidden)');
+            visibleRows.forEach(row => {
+                const resiCell = row.querySelector('td:nth-child(2)');
+                if (resiCell) {
+                    resiList.push(resiCell.title || resiCell.textContent);
+                }
+                ekspedisiSet.add(row.dataset.ekspedisi);
+            });
+            let ekspedisiList = Array.from(ekspedisiSet);
+            let totalPaket = visibleRows.length;
+            resiList.reverse(); 
+            return { resiList, ekspedisiList, totalPaket };
+        }
+
+        async function generatePDF(hoNumber, resiList, ekspedisiList, totalPaket) {
+            // ... (Fungsi PDF tidak berubah) ...
+            const doc = new jsPDF('p', 'mm', 'a5');
+            const today = new Date();
+            const tanggal = `${today.getDate().toString().padStart(2, '0')}/${(today.getMonth() + 1).toString().padStart(2, '0')}/${today.getFullYear()}`;
+            let ekspedisiText = "SEMUA EKSPEDISI";
+            const checkedCount = filterEkspedisiDropdown.querySelectorAll('input[type="checkbox"]:checked:not([value="Semua Ekspedisi"])').length;
+            if (checkedCount > 0) {
+                 ekspedisiText = ekspedisiList.join(', ');
+            }
+            if (ekspedisiText.length > 50) {
+                ekspedisiText = `${ekspedisiList.length} Ekspedisi Terpilih`;
+            }
+            const picWarehouse = currentUser.username || "PIC Warehouse";
+            const margin = 15;
+            const pageWidth = doc.internal.pageSize.getWidth();
+            doc.setFontSize(14);
+            doc.setFont("helvetica", "bold");
+            doc.text("SNM CV.SARANA NIAGA MULTIPACK", pageWidth / 2, margin, { align: 'center' });
+            doc.setFontSize(12);
+            doc.text("NSR GUDANG DEPOK", pageWidth / 2, margin + 7, { align: 'center' });
+            doc.setLineWidth(0.5);
+            doc.line(margin, margin + 17, pageWidth - margin, margin + 17);
+            doc.setFontSize(16);
+            doc.text("HANDOVER 3PL", pageWidth / 2, margin + 23, { align: 'center' });
+            let startY = margin + 34;
+            const lineSpacing = 7;
+            const labelX = margin;
+            const valueX = margin + 35;
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "bold");
+            doc.text("No. HO", labelX, startY);
+            doc.setFont("helvetica", "normal");
+            doc.text(hoNumber, valueX, startY);
+            startY += lineSpacing;
+            doc.setFont("helvetica", "bold");
+            doc.text("TANGGAL", labelX, startY);
+            doc.setFont("helvetica", "normal");
+            doc.text(tanggal, valueX, startY);
+            startY += lineSpacing;
+            doc.setFont("helvetica", "bold");
+            doc.text("EKSPEDISI", labelX, startY);
+            doc.setFont("helvetica", "normal");
+            doc.text(ekspedisiText, valueX, startY);
+            startY += lineSpacing;
+            doc.setFont("helvetica", "bold");
+            doc.text("TOTAL PAKET", labelX, startY);
+            doc.setFont("helvetica", "normal");
+            doc.text(totalPaket.toString() + " Paket", valueX, startY);
+            const maxTableRowsFirstPage = 10;
+            const itemsPerFirstPage = maxTableRowsFirstPage * 2;
+            const dataPage1 = resiList.slice(0, itemsPerFirstPage);
+            const dataOverflow = resiList.slice(itemsPerFirstPage);
+            let tableBodyPage1 = [];
+            for (let i = 0; i < maxTableRowsFirstPage; i++) {
+                let row = {};
+                const leftItem = dataPage1[i];
+                if (leftItem) {
+                    row.no1 = i + 1;
+                    row.resi1 = leftItem;
+                }
+                const rightIndex = i + maxTableRowsFirstPage;
+                const rightItem = dataPage1[rightIndex];
+                if (rightItem) {
+                    row.no2 = rightIndex + 1;
+                    row.resi2 = rightItem;
+                }
+                tableBodyPage1.push(row);
+            }
+            let tableBodyOverflow = [];
+            let needsAttachment = dataOverflow.length > 0;
+            if (needsAttachment) {
+                const splitIndexOverflow = Math.ceil(dataOverflow.length / 2);
+                const numRowsOverflow = splitIndexOverflow;
+                for (let i = 0; i < numRowsOverflow; i++) {
+                    let row = {};
+                    const leftItem = dataOverflow[i];
+                    if (leftItem) {
+                        row.no1 = i + itemsPerFirstPage + 1;
+                        row.resi1 = leftItem;
+                    }
+                    const rightIndex = i + splitIndexOverflow;
+                    const rightItem = dataOverflow[rightIndex];
+                    if (rightItem) {
+                        row.no2 = rightIndex + itemsPerFirstPage + 1;
+                        row.resi2 = rightItem;
+                    }
+                    tableBodyOverflow.push(row);
+                }
+            }
+            const tableStartY = startY + 10;
+            doc.autoTable({
+                startY: tableStartY,
+                theme: 'grid',
+                columns: [
+                    { header: 'NO', dataKey: 'no1' },
+                    { header: 'RESI', dataKey: 'resi1' },
+                    { header: 'NO', dataKey: 'no2' },
+                    { header: 'RESI', dataKey: 'resi2' },
+                ],
+                body: tableBodyPage1,
+                headStyles: {
+                    fillColor: [200, 200, 200],
+                    textColor: [0, 0, 0],
+                    fontSize: 8,
+                    halign: 'center'
+                },
+                bodyStyles: {
+                    fontSize: 7,
+                    cellPadding: 1
+                },
+                columnStyles: {
+                    no1: { cellWidth: 10, halign: 'center' },
+                    resi1: { cellWidth: 49 },
+                    no2: { cellWidth: 10, halign: 'center' },
+                    resi2: { cellWidth: 49 },
+                },
+                margin: { left: margin, right: margin }
+            });
+            let finalY = doc.lastAutoTable.finalY; 
+            if (needsAttachment) {
+                doc.setFontSize(8);
+                doc.setFont("helvetica", "italic");
+                doc.text("(Lanjutan di halaman lampiran...)", margin, finalY + 5);
+                finalY += 10; 
+            } else {
+                finalY += 5; 
+            }
+            if (finalY > (doc.internal.pageSize.getHeight() - 60)) { 
+                 doc.addPage();
+                 finalY = margin;
+                 doc.setFontSize(10);
+                 doc.setFont("helvetica", "bold");
+                 doc.text(`LAMPIRAN UNTUK No. HO: ${hoNumber}`, pageWidth / 2, margin - 5, { align: 'center' });
+            } else {
+                 finalY += 10; 
+            }
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            const maxWidth = pageWidth - (margin * 2);
+            doc.text("Paket yang sudah diterima 3PL sudah sepenuhnya menjadi tanggung jawab pihak tersebut.", margin, finalY, { maxWidth: maxWidth });
+            finalY += (doc.getTextDimensions("Paket yang sudah diterima 3PL sudah sepenuhnya menjadi tanggung jawab pihak tersebut.", { maxWidth: maxWidth }).h) + 2;
+            doc.text("Demikian surat serah terima dibuat agar dimanfaatkan sebaik-baiknya. Terima kasih.", margin, finalY, { maxWidth: maxWidth });
+            finalY += (doc.getTextDimensions("Demikian surat serah terima dibuat agar dimanfaatkan sebaik-baiknya. Terima kasih.", { maxWidth: maxWidth }).h) + 15;
+            doc.text("Hormat kami,", margin, finalY);
+            doc.text("Diterima Oleh,", pageWidth - margin - 50, finalY);
+            finalY += 20;
+            doc.text(`( ${picWarehouse} )`, margin, finalY);
+            doc.text("(..............................)", pageWidth - margin - 50, finalY);
+            if (needsAttachment) {
+                doc.addPage(); 
+                doc.setFontSize(10);
+                doc.setFont("helvetica", "bold");
+                doc.text(`LAMPIRAN UNTUK No. HO: ${hoNumber}`, pageWidth / 2, margin, { align: 'center' });
+                doc.autoTable({
+                    startY: margin + 10, 
+                    theme: 'grid',
+                    columns: [
+                        { header: 'NO', dataKey: 'no1' },
+                        { header: 'RESI', dataKey: 'resi1' },
+                    { header: 'NO', dataKey: 'no2' },
+                    { header: 'RESI', dataKey: 'resi2' },
+                ],
+                body: tableBodyOverflow,
+                headStyles: {
+                    fillColor: [200, 200, 200],
+                        textColor: [0, 0, 0],
+                        fontSize: 8,
+                        halign: 'center'
+                    },
+                    bodyStyles: {
+                        fontSize: 7,
+                        cellPadding: 1
+                    },
+                    columnStyles: {
+                        no1: { cellWidth: 10, halign: 'center' },
+                        resi1: { cellWidth: 49 },
+                        no2: { cellWidth: 10, halign: 'center' },
+                        resi2: { cellWidth: 49 },
+                    },
+                    margin: { left: margin, right: margin },
+                    didDrawPage: function(data) {
+                        if (data.pageNumber > 1) { 
+                            doc.setFontSize(10);
+                            doc.setFont("helvetica", "bold");
+                            doc.text(
+                                `LAMPIRAN UNTUK No. HO: ${hoNumber} (Hal. ${data.pageNumber + 1})`,
+                                pageWidth / 2, 
+                                margin - 5, 
+                                { align: 'center' }
+                            );
+                        }
+                    }
+                });
+            }
+            doc.save(`Handover_${hoNumber}.pdf`);
+        }
+        
+        // --- **** AKHIR FUNGSI-FUNGSI BARU PDF **** ---
+        
+        document.addEventListener('DOMContentLoaded', initializeApp);
+        
+    </script>
+</body>
+</html>
