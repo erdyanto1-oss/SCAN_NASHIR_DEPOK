@@ -1076,18 +1076,25 @@
             }
         }
 
-        // (v13) Mengganti suara error menjadi suara "Failed"
+        // --- PERUBAHAN ---
+        // (v13) Mengganti suara error
         function playErrorBeep() {
             if ('speechSynthesis' in window) {
                 try {
-                    // --- PERUBAHAN (v14): Ganti suara ke "Mpun Mas" ---
-                    const utterance = new SpeechSynthesisUtterance('Mpun Mas');
+                    // --- PERUBAHAN (Sesuai Permintaan): Ganti suara ke "OJO MAS" ---
+                    const utterance = new SpeechSynthesisUtterance('OJO MAS');
                     utterance.lang = 'id-ID'; // Gunakan bahasa Indonesia
-                    utterance.rate = 1.0;
-                    utterance.pitch = 1.0;
+                    
+                    // Suara "lembut" (sedikit lebih lambat dan rendah)
+                    utterance.rate = 0.95; // Sedikit lambat (default 1.0)
+                    utterance.pitch = 0.9;  // Sedikit lebih rendah nadanya (default 1.0)
+                    
+                    // Volume "keras"
+                    utterance.volume = 1.0; // Volume maksimal (default 1.0)
+                    
                     window.speechSynthesis.speak(utterance);
                 } catch (e) {
-                    console.error("Gagal memutar suara 'Mpun Mas':", e);
+                    console.error("Gagal memutar suara 'OJO MAS':", e);
                 }
             } else {
                 console.warn("Speech Synthesis tidak didukung browser ini.");
@@ -1110,6 +1117,7 @@
                 }
             }
         }
+        // --- AKHIR PERUBAHAN ---
 
         // (v13) Memodifikasi feedback untuk menerima 'tipe' (success/error)
         function showScanFeedback(message, type) {
