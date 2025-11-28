@@ -177,6 +177,7 @@
             position: relative;
             overflow: hidden; 
         }
+        /* Update Laser agar lebih lebar menyesuaikan viewfinder baru */
         .scanner-laser {
             position: absolute;
             top: 0;
@@ -357,7 +358,7 @@
         <!-- Panel Admin -->
         <div id="adminPanel" class="space-y-4 pt-4 border-t border-slate-200 hidden">
             <h2 class="text-lg font-semibold text-cyan-600 flex items-center gap-2">
-                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.03m-.001-.03l-.001.03m0 0l.001.03m0 0l.001.03m0 0l.001.03m-3.742 0l.001.03m-.001-.03l-.001.03m0 0l.001.03m0 0l.001.03m0 0l.001.03m0 0l.001.03M12 19.235M12 19.235M12 19.235M12 6c0-1.108.892-2 2-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM12 6c0-1.108-.892-2-2-2H8a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V6zM12 6c0-1.108.892-2 2-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM12 6c0-1.108-.892-2-2-2H8a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V6z" /></svg>
+                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.03m-.001-.03l-.001.03m0 0l.001.03m0 0l.001.03m0 0l.001.03m-3.742 0l.001.03m-.001-.03l-.001.03m0 0l.001.03m0 0l.001.03m0 0l.001.03M12 19.235M12 19.235M12 19.235M12 6c0-1.108.892-2 2-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM12 6c0-1.108-.892-2-2-2H8a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V6zM12 6c0-1.108.892-2 2-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM12 6c0-1.108-.892-2-2-2H8a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V6z" /></svg>
                 Panel Admin: Daftarkan Pengguna Baru
             </h2>
             <div id="registerStatus" class="text-center p-3 rounded-lg text-sm font-medium transition-opacity duration-300 opacity-0"></div>
@@ -461,7 +462,8 @@
     </div>
 
     <!-- Modal Duplicate (Lokal) -->
-    <div id="duplicateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+    <!-- PERUBAHAN: Menambahkan z-60 agar berada DI ATAS kamera (z-50) -->
+    <div id="duplicateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-60 hidden">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 text-center transform transition-all scale-95 opacity-0" id="modal-content">
             <svg class="mx-auto h-16 w-16 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
@@ -534,7 +536,8 @@
         let feedbackTimer = null; 
         let isFlashOn = false; 
         let isScanCooldown = false; 
-        let isPostSubmit = false; // --- NEW: Flag untuk menandai refresh otomatis ---
+        let isPostSubmit = false; 
+        let isScannerActiveBeforeModal = false; // --- NEW: Track scanner state for minimization ---
 
         // --- DOM Elements ---
         const loginContainer = document.getElementById('loginContainer');
@@ -569,8 +572,8 @@
         const summaryBenarEl = document.getElementById('summary-benar');
         const summarySalahEl = document.getElementById('summary-salah');
         const summaryBelumEl = document.getElementById('summary-belum');
-        const summaryBatchEl = document.getElementById('summary-batch'); // New
-        const batchSummaryCard = document.getElementById('batch-summary-card'); // New
+        const summaryBatchEl = document.getElementById('summary-batch'); 
+        const batchSummaryCard = document.getElementById('batch-summary-card'); 
         const scannerContainer = document.getElementById('scanner-container');
         const closeScannerBtn = document.getElementById('closeScannerBtn');
         const duplicateModal = document.getElementById('duplicateModal');
@@ -900,7 +903,16 @@
                     playErrorBeep();
                 }
             };
-            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+            const config = { 
+                fps: 20, 
+                qrbox: { width: 300, height: 150 }, 
+                formatsToSupport: [ 
+                    Html5QrcodeSupportedFormats.QR_CODE,
+                    Html5QrcodeSupportedFormats.CODE_128,
+                    Html5QrcodeSupportedFormats.CODE_39, 
+                    Html5QrcodeSupportedFormats.EAN_13
+                ]
+            };
             html5QrCode.start({ facingMode: "environment" }, config, qrCodeSuccessCallback)
                 .then(() => {
                     try {
@@ -1040,11 +1052,17 @@
 
         function showDuplicateModal(resi) {
             duplicateResiValueEl.textContent = resi;
+            if (!scannerContainer.classList.contains('hidden')) {
+                isScannerActiveBeforeModal = true;
+                scannerContainer.classList.add('hidden'); 
+                if (html5QrCode && html5QrCode.isScanning) {
+                     html5QrCode.pause(true); 
+                }
+            }
             duplicateModal.classList.remove('hidden');
             modalContent.classList.remove('modal-leave');
             modalContent.classList.add('modal-enter');
             if (modalCloseTimer) clearTimeout(modalCloseTimer);
-            modalCloseTimer = setTimeout(hideDuplicateModal, 5000);
         }
 
         function hideDuplicateModal() {
@@ -1053,6 +1071,15 @@
             modalContent.classList.add('modal-leave');
             setTimeout(() => {
                 duplicateModal.classList.add('hidden');
+                if (isScannerActiveBeforeModal) {
+                    scannerContainer.classList.remove('hidden'); 
+                    if (html5QrCode) {
+                         html5QrCode.resume(); 
+                    }
+                    isScannerActiveBeforeModal = false; 
+                } else {
+                    resiEl.focus();
+                }
             }, 300);
         }
 
@@ -1221,7 +1248,6 @@
             }
         }
 
-        // --- UPDATE: BULK SUBMIT & SESSION STATS ---
         async function submitBatchData() {
             if (resiBatch.length === 0) {
                 showStatus("Tidak ada resi dalam antrian untuk disimpan.", "error");
@@ -1286,7 +1312,6 @@
 
                     showStatus(statusMessage, statusType);
                     
-                    // --- UPDATE BARU: Tampilkan Stats Sesi ---
                     batchSummaryCard.classList.remove('hidden');
                     summaryBatchEl.textContent = processed.length;
                     
@@ -1296,12 +1321,10 @@
                     logTableBodyEl.innerHTML = `<tr id="initial-log-message"><td colspan="5" class="text-center text-slate-400 italic py-4">Memuat ulang data...</td></tr>`;
                     logCount = 0;
                     
-                    // --- SET FLAG: Refresh otomatis (jangan sembunyikan kartu sesi) ---
                     isPostSubmit = true; 
                     
                     await fetchDailyScans();
                     
-                    // --- RESET FLAG: Kembali ke normal (refresh manual sembunyikan kartu) ---
                     isPostSubmit = false; 
                     
                     filterPicSelectEl.value = 'my-scan';
@@ -1331,7 +1354,6 @@
             filterNoResults.classList.add('hidden');
             statusSummaryEl.classList.add('hidden'); 
             
-            // --- LOGIKA BARU: HANYA HIDE JIKA BUKAN POST-SUBMIT ---
             if (!isPostSubmit) {
                 batchSummaryCard.classList.add('hidden'); 
             }
@@ -1353,13 +1375,6 @@
                     if (result.scans.length === 0) {
                         logTableBodyEl.innerHTML = `<tr id="initial-log-message"><td colspan="5" class="text-center text-slate-400 italic py-4">Belum ada data scan hari ini.</td></tr>`;
                     } else {
-                        // --- UPDATE BARU: PERBAIKAN URUTAN ---
-                        // Balik urutan array agar data terbaru (yg ada di awal array dari server)
-                        // diproses TERAKHIR oleh addToScanResults (krn addToScanResults pakai insertRow(0)/prepend).
-                        // DENGAN DEMIKIAN:
-                        // Item Lama -> insertRow(0) -> Paling Atas
-                        // Item Baru -> insertRow(0) -> Paling Atas (Geser yg lama ke bawah)
-                        // Hasil Akhir: Item Baru di Paling Atas.
                         const reversedScans = result.scans.slice().reverse(); 
                         
                         reversedScans.forEach(item => {
