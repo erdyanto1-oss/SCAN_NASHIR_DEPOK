@@ -10,12 +10,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- **** PUSTAKA PDF BARU **** -->
+    <!-- **** PUSTAKA PDF **** -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     
     <!-- PWA Additions -->
-    <meta name="theme-color" content="#06b6d4"> <!-- Warna tema (Cyan) -->
+    <meta name="theme-color" content="#06b6d4">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Dispatch">
@@ -56,17 +56,92 @@
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
+        
         /* Style for scanner */
-        #reader__dashboard_section_csr { display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        #reader__dashboard_section_csr span { margin-bottom: 10px; }
-        #html5-qrcode-button-camera-permission,
-        #html5-qrcode-button-camera-stop,
-        #html5-qrcode-button-camera-start {
-            background-color: #06b6d4; color: white; padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer;
+        #reader {
+            position: relative;
+            width: 100%;
+            border-radius: 8px;
+            overflow: hidden;
         }
-        #reader__dashboard_section_csr select { background-color: white; border: 1px solid #ccc; padding: 5px; border-radius: 5px; }
+        /* Hide html5-qrcode standard elements if needed or style them */
+        #reader__dashboard_section_csr span { display: none; }
+        
+        /* Laser Scanner Style - Horizontal line moving down */
+        .scanner-laser {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background-color: #EF4444; 
+            box-shadow: 0 0 10px #EF4444, 0 0 5px #EF4444;
+            opacity: 0.8;
+            animation: scan-laser 2s infinite linear;
+            z-index: 20; 
+            pointer-events: none;
+        }
+        @keyframes scan-laser {
+            0% { top: 10%; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 90%; opacity: 0; }
+        }
 
-        /* --- CSS FILTER MULTI-SELECT --- */
+        #scan-feedback {
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(-20px);
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem;
+            position: absolute; 
+            top: 1.5rem; 
+            z-index: 60; /* Higher than laser */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            text-align: center;
+        }
+        #scan-feedback.success { background-color: #10B981; color: white; opacity: 1; top: 1.5rem; }
+        #scan-feedback.error { background-color: #EF4444; color: white; opacity: 1; top: 1.5rem; }
+
+        #flashBtn {
+            position: absolute;
+            top: 1.5rem; 
+            left: 1.5rem; 
+            z-index: 60;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            width: 44px; 
+            height: 44px; 
+            border-radius: 9999px; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        #flashBtn:hover { background-color: rgba(0, 0, 0, 0.7); }
+        #flashBtn.flash-on { background-color: #f59e0b; color: #78350f; border-color: #f59e0b; }
+
+        .truncate-on-mobile {
+            max-width: none;
+            overflow: visible;
+            text-overflow: clip;
+            white-space: normal;
+        }
+        @media (max-width: 640px) { 
+            .truncate-on-mobile {
+                max-width: 80px; 
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+        }
+        
+        /* Filter Styles */
         .filter-dropdown { position: relative; }
         .filter-dropdown-content {
             display: none;
@@ -82,155 +157,15 @@
             overflow-y: auto;
             right: 0;
         }
-        .filter-dropdown-content label {
-            display: block;
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-        }
+        .filter-dropdown-content label { display: block; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
         .filter-dropdown-content label:hover { background-color: #f1f5f9; }
         .filter-dropdown-content input { margin-right: 8px; }
-
-        /* --- CSS ANTRIAN GRUP --- */
-        .ekspedisi-group {
-            animation: fadeIn 0.5s ease-in-out;
-            border-radius: 0.5rem; 
-            overflow: hidden; 
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-        }
-        .ekspedisi-header {
-            background-color: #0891b2; 
-            color: white;
-            font-weight: 700; 
-            padding: 0.625rem; 
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .sku-group-container {
-            padding: 0.5rem; 
-            space-y: 0.5rem; 
-        }
-        .sku-header {
-            background-color: #e2e8f0; 
-            color: #334155; 
-            font-weight: 600; 
-            padding: 0.5rem; 
-            border-top-left-radius: 0.5rem; 
-            border-top-right-radius: 0.5rem;
-            font-size: 0.875rem; 
-            border-bottom: 1px solid #cbd5e1; 
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .resi-items-container {
-            background-color: #ffffff; 
-            padding: 0.5rem; 
-            border-bottom-left-radius: 0.5rem; 
-            border-bottom-right-radius: 0.5rem;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-        }
-        .tag-item {
-            padding: 0.25rem 0.625rem;
-            font-size: 0.875rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 0.5rem;
-        }
-        .tag-item button {
-            opacity: 0;
-        }
-        .tag-item:hover button {
-            opacity: 1;
-        }
-
-        /* --- CSS SCANNER --- */
-        #scan-feedback {
-            transition: all 0.3s ease;
-            opacity: 0;
-            transform: translateY(-20px);
-            font-weight: 600;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-            padding: 0.75rem 1.25rem;
-            border-radius: 0.5rem;
-            position: absolute; 
-            top: 1.5rem; 
-            z-index: 10;
-        }
-        #scan-feedback.success {
-            background-color: #10B981; 
-            color: white;
-            opacity: 1;
-            transform: translateY(0);
-        }
-        #scan-feedback.error {
-            background-color: #EF4444; 
-            color: white;
-            opacity: 1;
-            transform: translateY(0);
-        }
-        #reader {
-            position: relative;
-            overflow: hidden; 
-        }
-        /* Update Laser agar lebih lebar menyesuaikan viewfinder baru */
-        .scanner-laser {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background-color: #EF4444; 
-            box-shadow: 0 0 10px #EF4444, 0 0 5px #EF4444;
-            opacity: 0.7;
-            animation: scan-laser 2.5s infinite linear;
-            z-index: 5; 
-        }
-        @keyframes scan-laser {
-            0% { transform: translateY(0); }
-            50% { transform: translateY(248px); } 
-            100% { transform: translateY(0); }
-        }
-        #flashBtn {
-            position: absolute;
-            top: 1.5rem; 
-            left: 1.5rem; 
-            z-index: 10;
-            background-color: rgba(255, 255, 255, 0.2);
-            color: white;
-            width: 44px; 
-            height: 44px; 
-            border-radius: 9999px; 
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-        }
-        #flashBtn:hover {
-            background-color: rgba(255, 255, 255, 0.4);
-        }
-        #flashBtn.flash-on {
-            background-color: #f59e0b; 
-            color: #78350f; 
-        }
-        .truncate-on-mobile {
-            max-width: none;
-            overflow: visible;
-            text-overflow: clip;
-            white-space: normal;
-        }
-        @media (max-width: 640px) { 
-            .truncate-on-mobile {
-                max-width: 80px; 
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-        }
+        
+        /* Group Styles */
+        .ekspedisi-group { animation: fadeIn 0.5s ease-in-out; border-radius: 0.5rem; overflow: hidden; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); }
+        .ekspedisi-header { background-color: #0891b2; color: white; font-weight: 700; padding: 0.625rem; display: flex; justify-content: space-between; align-items: center; }
+        .sku-header { background-color: #e2e8f0; color: #334155; font-weight: 600; padding: 0.5rem; border-top-left-radius: 0.5rem; border-top-right-radius: 0.5rem; font-size: 0.875rem; border-bottom: 1px solid #cbd5e1; display: flex; justify-content: space-between; align-items: center; }
+        .resi-items-container { background-color: #ffffff; padding: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem; }
     </style>
 </head>
 <body class="bg-gradient-to-br from-cyan-50 to-blue-100 text-slate-800 flex items-center justify-center min-h-screen p-4">
@@ -248,11 +183,11 @@
         <form id="loginForm" class="space-y-4">
             <div>
                 <label for="username" class="block text-sm font-medium text-slate-600 mb-1">Username</label>
-                <input type="text" id="username" name="username" required class="w-full bg-slate-100 border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition duration-200">
+                <input type="text" id="username" name="username" required class="w-full bg-slate-100 border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-cyan-500 outline-none transition duration-200">
             </div>
             <div>
                 <label for="password" class="block text-sm font-medium text-slate-600 mb-1">Password</label>
-                <input type="password" id="password" name="password" required class="w-full bg-slate-100 border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition duration-200">
+                <input type="password" id="password" name="password" required class="w-full bg-slate-100 border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-cyan-500 outline-none transition duration-200">
             </div>
             <button id="loginBtn" type="submit" class="w-full bg-cyan-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-cyan-600 transition duration-300 flex items-center justify-center gap-2">
                 <svg id="login-spinner" class="w-5 h-5 hidden rotating" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -286,7 +221,7 @@
                     <div class="space-y-4">
                         <div>
                             <label for="ekspedisi" class="block text-sm font-medium text-slate-600 mb-1">Pilih Ekspedisi</label>
-                            <select id="ekspedisi" name="ekspedisi" required class="w-full bg-slate-100 border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition duration-200">
+                            <select id="ekspedisi" name="ekspedisi" required class="w-full bg-slate-100 border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-cyan-500 outline-none transition duration-200">
                                  <option value="">-- Pilih Ekspedisi --</option>
                                 <option value="JNT TIKTOK">JNT TIKTOK</option>
                                 <option value="JNT REGULER">JNT REGULER</option>
@@ -309,7 +244,7 @@
                         </div>
                         <div>
                             <label for="sku" class="block text-sm font-medium text-slate-600 mb-1">Input SKU</label>
-                            <input type="text" id="sku" name="sku" required placeholder="SKU untuk batch ini" class="w-full bg-slate-100 border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition duration-200">
+                            <input type="text" id="sku" name="sku" required placeholder="SKU untuk batch ini" class="w-full bg-slate-100 border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-cyan-500 outline-none transition duration-200">
                         </div>
                     </div>
                 </div>
@@ -324,7 +259,7 @@
                         <form id="resiForm" class="flex items-center gap-2">
                            <input type="text" id="resi" name="resi" placeholder="Ketik atau Scan..." class="w-full bg-slate-50 border-2 border-dashed border-cyan-400 rounded-lg px-4 py-3 text-center text-lg focus:ring-2 focus:ring-cyan-500 focus:border-solid focus:border-cyan-500 outline-none transition duration-200" autocomplete="off">
                            <button id="scanBtn" type="button" title="Pindai dengan Kamera" class="p-3 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition">
-                               <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.776 48.776 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.SAITAMw" /></svg>
+                               <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.776 48.776 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5h.008z" /></svg>
                            </button>
                         </form>
                     </div>
@@ -462,8 +397,7 @@
     </div>
 
     <!-- Modal Duplicate (Lokal) -->
-    <!-- PERUBAHAN: Menambahkan z-60 agar berada DI ATAS kamera (z-50) -->
-    <div id="duplicateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-60 hidden">
+    <div id="duplicateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 text-center transform transition-all scale-95 opacity-0" id="modal-content">
             <svg class="mx-auto h-16 w-16 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
@@ -495,8 +429,9 @@
         </div>
     </div>
 
-    <!-- Scanner Modal -->
-    <div id="scanner-container" class="fixed inset-0 bg-black z-50 hidden flex-col items-center justify-center p-4">
+    <!-- Scanner Modal (FULL SCREEN) -->
+    <div id="scanner-container" class="fixed inset-0 bg-black z-50 hidden flex-col items-center justify-center p-0">
+        <!-- Floating Controls -->
         <div id="scan-feedback" class=""></div>
         <button id="flashBtn" class="hidden" title="Toggle Flash">
             <svg id="flash-icon-off" class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -507,13 +442,14 @@
             </svg>
         </button>
         
-        <div id="reader" class="w-full max-w-lg">
-            <div class="scanner-laser"></div>
+        <!-- Scanner Viewport -->
+        <div id="reader" class="w-full h-full bg-black">
+             <div class="scanner-laser"></div>
         </div>
         
-        <div class="flex items-center gap-4 mt-4">
-            <button id="closeScannerBtn" class="bg-red-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-red-600 transition">
-                Tutup
+        <div class="fixed bottom-10 left-0 right-0 flex justify-center z-50">
+            <button id="closeScannerBtn" class="bg-red-500 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:bg-red-600 transition transform active:scale-95 border-2 border-white">
+                Tutup Kamera
             </button>
         </div>
     </div>
@@ -537,7 +473,7 @@
         let isFlashOn = false; 
         let isScanCooldown = false; 
         let isPostSubmit = false; 
-        let isScannerActiveBeforeModal = false; // --- NEW: Track scanner state for minimization ---
+        let isScannerActiveBeforeModal = false;
 
         // --- DOM Elements ---
         const loginContainer = document.getElementById('loginContainer');
@@ -887,10 +823,17 @@
             scannerContainer.classList.remove('hidden');
             scannerContainer.classList.add('flex');
             html5QrCode = new Html5Qrcode("reader");
+            
             const qrCodeSuccessCallback = (decodedText, decodedResult) => {
                 if (isScanCooldown) {
                     return; 
                 }
+                
+                // FILTER HANYA TERIMA YANG PANJANG (BIASANYA RESI DIATAS 5 KARAKTER)
+                if(decodedText.length < 5) {
+                     return; 
+                }
+
                 const isNew = addResiToBatch(decodedText); 
                 if (isNew) {
                     isScanCooldown = true;
@@ -903,17 +846,40 @@
                     playErrorBeep();
                 }
             };
+
+            // **** KONFIGURASI SCANNER FIXED UNTUK RESI ****
             const config = { 
                 fps: 20, 
-                qrbox: { width: 300, height: 150 }, 
+                // Gunakan fungsi untuk qrbox agar responsif sesuai lebar layar HP
+                qrbox: function(viewfinderWidth, viewfinderHeight) {
+                    // Gunakan 80% dari lebar layar agar barcode panjang masuk
+                    let minEdgePercentage = 0.8; 
+                    let qrboxWidth = Math.floor(viewfinderWidth * minEdgePercentage);
+                    // Tinggi kotak lebih pendek (karena barcode resi itu wide/lebar)
+                    let qrboxHeight = Math.floor(qrboxWidth / 2.5); 
+                    return {
+                        width: qrboxWidth,
+                        height: qrboxHeight
+                    };
+                },
+                // **** BATASI FORMAT SCANNER AGAR TIDAK SALAH BACA ****
                 formatsToSupport: [ 
-                    Html5QrcodeSupportedFormats.QR_CODE,
-                    Html5QrcodeSupportedFormats.CODE_128,
-                    Html5QrcodeSupportedFormats.CODE_39, 
-                    Html5QrcodeSupportedFormats.EAN_13
-                ]
+                    Html5QrcodeSupportedFormats.CODE_128, // Paling umum untuk resi
+                    Html5QrcodeSupportedFormats.QR_CODE   // Kadang ada resi QR
+                ],
+                // Matikan fitur eksperimental browser detector karena kadang bug di Android
+                experimentalFeatures: {
+                    useBarCodeDetectorIfSupported: false 
+                }
             };
-            html5QrCode.start({ facingMode: "environment" }, config, qrCodeSuccessCallback)
+            
+            // Fokus Continous untuk kamera HP
+            const cameraConfig = { 
+                facingMode: "environment",
+                focusMode: "continuous" 
+            };
+
+            html5QrCode.start(cameraConfig, config, qrCodeSuccessCallback)
                 .then(() => {
                     try {
                         const track = html5QrCode.getRunningTrack();
@@ -927,10 +893,9 @@
                         flashBtn.classList.add('hidden'); 
                     }
                     isFlashOn = false;
-                    flashBtn.classList.remove('bg-yellow-400', 'text-yellow-900');
+                    flashBtn.classList.remove('flash-on');
                     flashIconOn.classList.add('hidden');
                     flashIconOff.classList.remove('hidden');
-                    flashBtn.classList.remove('flash-on');
                 })
                 .catch(err => {
                     console.error("Gagal memulai scanner", err);
@@ -1135,7 +1100,7 @@
                 ekspedisiGroup.innerHTML = `<h3 class="ekspedisi-header">
                                               <span>${ekspedisi}</span> 
                                               <span class="ekspedisi-count-span font-normal">(1)</span>
-                                          </h3>`;
+                                            </h3>`;
                 ekspedisiGroup.appendChild(skuGroupContainer);
                 resiListEl.prepend(ekspedisiGroup);
             } else {
@@ -1157,7 +1122,7 @@
                 skuGroup.innerHTML = `<h4 class="sku-header">
                                           <span>${sku}</span>
                                           <span class="sku-count-span font-normal text-slate-600">(1)</span>
-                                      </h4>`;
+                                        </h4>`;
                 skuGroup.appendChild(resiContainer);
                 skuGroupContainer.prepend(skuGroup);
             } else {
@@ -1249,7 +1214,6 @@
             }
         }
 
-        // --- UPDATE: BULK SUBMIT & SESSION STATS ---
         async function submitBatchData() {
             if (resiBatch.length === 0) {
                 showStatus("Tidak ada resi dalam antrian untuk disimpan.", "error");
@@ -1314,7 +1278,6 @@
 
                     showStatus(statusMessage, statusType);
                     
-                    // --- UPDATE BARU: Tampilkan Stats Sesi ---
                     batchSummaryCard.classList.remove('hidden');
                     summaryBatchEl.textContent = processed.length;
                     
@@ -1324,12 +1287,10 @@
                     logTableBodyEl.innerHTML = `<tr id="initial-log-message"><td colspan="5" class="text-center text-slate-400 italic py-4">Memuat ulang data...</td></tr>`;
                     logCount = 0;
                     
-                    // --- SET FLAG: Refresh otomatis (jangan sembunyikan kartu sesi) ---
                     isPostSubmit = true; 
                     
                     await fetchDailyScans();
                     
-                    // --- RESET FLAG: Kembali ke normal (refresh manual sembunyikan kartu) ---
                     isPostSubmit = false; 
                     
                     filterPicSelectEl.value = 'my-scan';
@@ -1359,7 +1320,6 @@
             filterNoResults.classList.add('hidden');
             statusSummaryEl.classList.add('hidden'); 
             
-            // --- LOGIKA BARU: HANYA HIDE JIKA BUKAN POST-SUBMIT ---
             if (!isPostSubmit) {
                 batchSummaryCard.classList.add('hidden'); 
             }
@@ -1381,13 +1341,6 @@
                     if (result.scans.length === 0) {
                         logTableBodyEl.innerHTML = `<tr id="initial-log-message"><td colspan="5" class="text-center text-slate-400 italic py-4">Belum ada data scan hari ini.</td></tr>`;
                     } else {
-                        // --- UPDATE BARU: PERBAIKAN URUTAN ---
-                        // Balik urutan array agar data terbaru (yg ada di awal array dari server)
-                        // diproses TERAKHIR oleh addToScanResults (krn addToScanResults pakai insertRow(0)/prepend).
-                        // DENGAN DEMIKIAN:
-                        // Item Lama -> insertRow(0) -> Paling Atas
-                        // Item Baru -> insertRow(0) -> Paling Atas (Geser yg lama ke bawah)
-                        // Hasil Akhir: Item Baru di Paling Atas.
                         const reversedScans = result.scans.slice().reverse(); 
                         
                         reversedScans.forEach(item => {
