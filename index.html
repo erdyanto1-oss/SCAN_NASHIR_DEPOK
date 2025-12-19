@@ -28,21 +28,37 @@
     <link rel="apple-touch-icon" href="https://placehold.co/192x192/06b6d4/ffffff?text=DND">
     <link rel="icon" type="image/png" href="https://placehold.co/192x192/06b6d4/ffffff?text=DND">
 
-    <!-- Manifest JSON -->
+    <!-- Manifest JSON (Data URI) -->
     <link rel="manifest" href='data:application/manifest+json;base64,ewogICJuYW1lIjogIkRpc3BhdGNoIE5hc2hpciBEZXBvayIsCiAgInNob3J0X25hbWUiOiAiRGlzcGF0Y2giLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiI2ZmZmZmZiIsCiAgInRoZW1lX2NvbG9yIjogIiMwNmI2ZDQiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJodHRwczovL3BsYWNlaG9sZC5jby8xOTJ4MTkyLzA2YjZkNC9mZmZmZmY/dGV4dD1ETkQiLAogICAgICAic2l6ZXMiOiAiMTkyeDE5MiIsCiAgICAgICJ0eXBlIjogImltYWdlL3BuZyIKICAgIH0sCiAgICB7CiAgICAgICInNyYyI6ICJodHRwczovL3BsYWNlaG9sZC5jby81MTJ4NTEyLzA2YjZkNC9mZmZmZmY/dGV4dD1ETkQiLAogICAgICAic2l6ZXMiOiAiNTEyeDUxMiIsCiAgICAgICJ0eXBlIjogImltYWdlL3BuZyIKICAgIH0KICBdCn0='>
     
     <style>
-        body { 
+        /* --- APP-LIKE SHELL STYLES --- */
+        html, body { 
             font-family: 'Inter', sans-serif; 
             -webkit-user-select: none; 
             user-select: none;
             -webkit-overflow-scrolling: touch;
-            overscroll-behavior-y: none;
+            overscroll-behavior-y: none; /* Mencegah pull-to-refresh di Chrome Mobile */
+            
+            /* Kunci agar Full Screen tanpa scroll bar di body utama */
+            height: 100%;
+            width: 100%;
+            overflow: hidden; 
+            position: fixed; /* Fix rubber banding iOS */
         }
         
+        /* Pastikan elemen form bisa dipilih */
         input, textarea, select {
             -webkit-user-select: auto;
             user-select: auto;
+        }
+
+        /* Scrollable Container untuk konten dalam */
+        .scroll-container {
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            height: 100%;
+            width: 100%;
         }
 
         .log-item { animation: fadeIn 0.5s ease-in-out; }
@@ -88,7 +104,6 @@
             height: 100vh;
             background-color: #000;
             z-index: 100; /* Paling atas */
-            /* PERBAIKAN: Menghapus display: flex dari sini agar class 'hidden' di HTML berfungsi */
         }
 
         #reader {
@@ -105,7 +120,7 @@
         #reader video {
             width: 100% !important;
             height: 100% !important;
-            object-fit: cover !important; /* Kunci agar tidak ada area hitam */
+            object-fit: cover !important; 
         }
         
         #reader__dashboard_section_csr span { display: none; }
@@ -140,7 +155,7 @@
             padding: 0.75rem 1.25rem;
             border-radius: 0.5rem;
             position: absolute; 
-            top: 4rem; /* Turun sedikit dari atas */
+            top: 4rem; 
             z-index: 130;
             left: 50%;
             transform: translateX(-50%);
@@ -153,7 +168,7 @@
         #flashBtn {
             position: absolute;
             top: 2rem; 
-            right: 2rem; /* Pindah ke kanan atas */
+            right: 2rem; 
             z-index: 130;
             background-color: rgba(0, 0, 0, 0.5);
             color: white;
@@ -242,7 +257,15 @@
 <body class="bg-gradient-to-br from-cyan-50 to-blue-100 text-slate-800 flex flex-col items-center justify-center min-h-screen p-0 md:p-4">
 
     <!-- Kontainer Login -->
-    <div id="loginContainer" class="w-full max-w-sm bg-white rounded-none md:rounded-2xl shadow-none md:shadow-2xl md:shadow-blue-200/50 p-8 space-y-6 h-screen md:h-auto flex flex-col justify-center">
+    <div id="loginContainer" class="w-full max-w-sm bg-white rounded-none md:rounded-2xl shadow-none md:shadow-2xl md:shadow-blue-200/50 p-8 space-y-6 h-full md:h-auto flex flex-col justify-center scroll-container relative">
+        <!-- Install App Button (Visible on Login Screen) -->
+        <button id="installAppBtnLogin" class="hidden absolute top-4 right-4 bg-indigo-600 text-white font-bold py-1.5 px-3 rounded-lg hover:bg-indigo-700 transition duration-300 flex items-center gap-1 shadow-lg text-sm z-50">
+            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+            Install App
+        </button>
+
         <div class="text-center">
             <svg class="mx-auto h-12 w-auto text-cyan-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5zM13.5 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5z" />
@@ -268,7 +291,7 @@
     </div>
 
     <!-- Kontainer Aplikasi Utama -->
-    <div id="mainAppContainer" class="w-full max-w-2xl bg-white rounded-none md:rounded-2xl shadow-none md:shadow-2xl md:shadow-blue-200/50 p-4 pb-24 md:p-8 space-y-6 hidden min-h-screen md:min-h-0">
+    <div id="mainAppContainer" class="w-full max-w-2xl bg-white rounded-none md:rounded-2xl shadow-none md:shadow-2xl md:shadow-blue-200/50 p-4 pb-24 md:p-8 space-y-6 hidden h-full overflow-y-auto scroll-container">
         <!-- Common Header -->
         <div class="flex justify-between items-center border-b border-slate-200 pb-4">
             <div class="text-left">
@@ -282,7 +305,7 @@
         </div>
 
         <!-- MENU 1: SCAN VIEW (Input & Antrian) -->
-        <div id="view-scan" class="space-y-6">
+        <div id="view-scan" class="space-y-6 pb-20">
             <div class="flex flex-col md:grid md:grid-cols-2 gap-6">
                 <!-- Kolom Kiri: Input -->
                 <div class="space-y-6">
@@ -403,7 +426,7 @@
         </div>
 
         <!-- MENU 2: HASIL VIEW -->
-        <div id="view-hasil" class="space-y-4 hidden">
+        <div id="view-hasil" class="space-y-4 hidden pb-20">
             <h2 class="text-lg font-semibold text-cyan-600 border-b border-slate-200 pb-2 mb-4 flex items-center gap-2">
                 <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" /></svg>
                 Hasil Scan & Validasi
@@ -533,7 +556,6 @@
     </div>
 
     <!-- Scanner Modal (FULL SCREEN) -->
-    <!-- PERBAIKAN: Menambahkan flex-col di sini, karena dihapus dari CSS -->
     <div id="scanner-container" class="fixed inset-0 bg-black hidden flex-col">
         <!-- Floating Controls -->
         <div id="scan-feedback" class=""></div>
@@ -578,7 +600,7 @@
         let isScanCooldown = false; 
         let isPostSubmit = false; 
         let isScannerActiveBeforeModal = false;
-        let isScannerBusy = false; // NEW: Prevent race conditions
+        let isScannerBusy = false; 
         let deferredPrompt; // PWA install prompt
         let lastBackPressTime = 0; // Untuk double press exit
 
@@ -640,7 +662,8 @@
         const flashBtn = document.getElementById('flashBtn'); 
         const flashIconOn = document.getElementById('flash-icon-on'); 
         const flashIconOff = document.getElementById('flash-icon-off'); 
-        const installAppBtn = document.getElementById('installAppBtn');
+        const installAppBtnLogin = document.getElementById('installAppBtnLogin');
+        const installAppBtnAdmin = document.getElementById('installAppBtn');
         
         // --- Navigation Elements ---
         const viewScan = document.getElementById('view-scan');
@@ -653,13 +676,17 @@
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            // Tampilkan tombol install jika user belum menginstal
+            // Tampilkan tombol install di layar login
+            installAppBtnLogin.classList.remove('hidden');
+            
+            // Tampilkan tombol install di panel admin jika admin login
             if (currentUser && currentUser.role === 'Admin') {
-                installAppBtn.classList.remove('hidden');
+                installAppBtnAdmin.classList.remove('hidden');
             }
         });
         
-        installAppBtn.addEventListener('click', async () => {
+        // Handler untuk tombol di layar login
+        installAppBtnLogin.addEventListener('click', async () => {
             if (deferredPrompt) {
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
@@ -667,7 +694,19 @@
                     console.log('User accepted the install prompt');
                 }
                 deferredPrompt = null;
-                installAppBtn.classList.add('hidden');
+                installAppBtnLogin.classList.add('hidden');
+            }
+        });
+
+        // Handler untuk tombol di panel admin
+        installAppBtnAdmin.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+                if (outcome === 'accepted') {
+                    installAppBtnAdmin.classList.add('hidden');
+                }
             }
         });
 
@@ -795,9 +834,9 @@
             loggedInUsernameEl.textContent = currentUser.username;
             if (currentUser.role === 'Admin') {
                 adminPanel.classList.remove('hidden');
-                // Cek apakah prompt install tersedia
+                // Cek apakah prompt install tersedia untuk admin
                 if (deferredPrompt) {
-                     installAppBtn.classList.remove('hidden');
+                     installAppBtnAdmin.classList.remove('hidden');
                 }
             } else {
                 adminPanel.classList.add('hidden');
