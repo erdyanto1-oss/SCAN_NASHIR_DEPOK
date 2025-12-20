@@ -8,7 +8,10 @@
     <title>Dispatch Nashir Depok</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Script Scanner -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -28,8 +31,8 @@
     <link rel="apple-touch-icon" href="https://placehold.co/192x192/06b6d4/ffffff?text=DND">
     <link rel="icon" type="image/png" href="https://placehold.co/192x192/06b6d4/ffffff?text=DND">
 
-    <!-- Manifest JSON -->
-    <link rel="manifest" href='data:application/manifest+json;base64,ewogICJuYW1lIjogIkRpc3BhdGNoIE5hc2hpciBEZXBvayIsCiAgInNob3J0X25hbWUiOiAiRGlzcGF0Y2giLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiI2ZmZmZmZiIsCiAgInRoZW1lX2NvbG9yIjogIiMwNmI2ZDQiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJodHRwczovL3BsYWNlaG9sZC5jby8xOTJ4MTkyLzA2YjZkNC9mZmZmZmY/dGV4dD1ETkQiLAogICAgICAic2l6ZXMiOiAiMTkyeDE5MiIsCiAgICAgICJ0eXBlIjogImltYWdlL3BuZyIKICAgIH0sCiAgICB7CiAgICAgICInNyYyI6ICJodHRwczovL3BsYWNlaG9sZC5jby81MTJ4NTEyLzA2YjZkNC9mZmZmZmY/dGV4dD1ETkQiLAogICAgICAic2l6ZXMiOiAiNTEyeDUxMiIsCiAgICAgICJ0eXBlIjogImltYWdlL3BuZyIKICAgIH0KICBdCn0='>
+    <!-- Manifest JSON (Base64 Encoded for Single File PWA) -->
+    <link rel="manifest" href='data:application/manifest+json;base64,ewogICJuYW1lIjogIkRpc3BhdGNoIE5hc2hpciBEZXBvayIsCiAgInNob3J0X25hbWUiOiAiRGlzcGF0Y2giLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiI2ZmZmZmZiIsCiAgInRoZW1lX2NvbG9yIjogIiMwNmI2ZDQiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJodHRwczovL3BsYWNlaG9sZC5jby8xOTJ4MTkyLzA2YjZkNC9mZmZmZmY/dGV4dD1ETkQiLAogICAgICAic2l6ZXMiOiAiMTkyeDE5MiIsCiAgICAgICJ0eXBlIjogImltYWdlL3BuZyIKICAgIH0KICBdCn0='>
     
     <style>
         body { 
@@ -37,12 +40,18 @@
             -webkit-user-select: none; 
             user-select: none;
             -webkit-overflow-scrolling: touch;
-            overscroll-behavior-y: none;
+            overscroll-behavior-y: none; /* Mencegah refresh tarik-turun pada mobile */
         }
         
+        /* Izinkan select text pada input */
         input, textarea, select {
             -webkit-user-select: auto;
             user-select: auto;
+        }
+
+        /* Tombol lebih responsif di touch screen */
+        button, a, input[type="submit"] {
+            touch-action: manipulation;
         }
 
         .log-item { animation: fadeIn 0.5s ease-in-out; }
@@ -87,8 +96,7 @@
             width: 100vw;
             height: 100vh;
             background-color: #000;
-            z-index: 100; /* Paling atas */
-            /* PERBAIKAN: Menghapus display: flex dari sini agar class 'hidden' di HTML berfungsi */
+            z-index: 9999; /* Pastikan selalu paling atas */
         }
 
         #reader {
@@ -101,49 +109,52 @@
             left: 0;
         }
 
-        /* Memaksa video agar mengisi seluruh layar tanpa bar hitam */
         #reader video {
             width: 100% !important;
             height: 100% !important;
-            object-fit: cover !important; /* Kunci agar tidak ada area hitam */
+            object-fit: cover !important;
         }
         
-        #reader__dashboard_section_csr span { display: none; }
+        /* Hembunyikan elemen bawaan html5-qrcode yang mengganggu */
+        #reader__dashboard_section_csr span, 
+        #reader__scan_region img { 
+            display: none !important; 
+        }
         
-        /* Laser Scanner Style */
+        /* Laser Scanner Style - Dibuat Melebar untuk Resi */
         .scanner-laser {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
+            top: 25%; /* Mulai dari area tengah agak atas */
+            left: 5%; /* Margin kiri */
+            width: 90%; /* Lebar penuh */
+            height: 2px;
             background-color: #EF4444; 
-            box-shadow: 0 0 10px #EF4444, 0 0 5px #EF4444;
+            box-shadow: 0 0 15px #EF4444, 0 0 8px #EF4444;
             opacity: 0.8;
-            animation: scan-laser 2s infinite linear;
-            z-index: 120; /* Di atas video */
+            animation: scan-laser 2.5s infinite ease-in-out;
+            z-index: 10001; 
             pointer-events: none;
         }
+        
         @keyframes scan-laser {
             0% { top: 10%; opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
             100% { top: 90%; opacity: 0; }
         }
 
         #scan-feedback {
             transition: all 0.3s ease;
             opacity: 0;
-            transform: translateY(-20px);
+            transform: translateY(-20px) translateX(-50%);
             font-weight: 600;
             text-shadow: 0 1px 2px rgba(0,0,0,0.2);
             padding: 0.75rem 1.25rem;
             border-radius: 0.5rem;
             position: absolute; 
-            top: 4rem; /* Turun sedikit dari atas */
-            z-index: 130;
+            top: 6rem; /* Turunkan sedikit agar tidak tertutup header */
+            z-index: 10002;
             left: 50%;
-            transform: translateX(-50%);
             width: 90%;
             text-align: center;
         }
@@ -152,9 +163,9 @@
 
         #flashBtn {
             position: absolute;
-            top: 2rem; 
-            right: 2rem; /* Pindah ke kanan atas */
-            z-index: 130;
+            top: 6rem; /* Turunkan sedikit */
+            right: 2rem;
+            z-index: 10002;
             background-color: rgba(0, 0, 0, 0.5);
             color: white;
             width: 48px; 
@@ -169,6 +180,21 @@
         }
         #flashBtn:hover { background-color: rgba(0, 0, 0, 0.7); }
         #flashBtn.flash-on { background-color: #f59e0b; color: #78350f; border-color: #f59e0b; }
+
+        /* Error Container inside Scanner */
+        #scanner-error-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 85%;
+            z-index: 10003;
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
 
         .truncate-on-mobile {
             max-width: none;
@@ -211,32 +237,86 @@
         .sku-header { background-color: #e2e8f0; color: #334155; font-weight: 600; padding: 0.5rem; border-top-left-radius: 0.5rem; border-top-right-radius: 0.5rem; font-size: 0.875rem; border-bottom: 1px solid #cbd5e1; display: flex; justify-content: space-between; align-items: center; }
         .resi-items-container { background-color: #ffffff; padding: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem; }
 
-        /* Bottom Nav Styles */
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: #64748b; /* slate-500 */
-            width: 50%;
-            transition: all 0.2s ease;
-            -webkit-tap-highlight-color: transparent;
+        /* --- MODERN 3D HEADER & NAV STYLES --- */
+        #topHeader {
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            background: linear-gradient(135deg, #06b6d4 0%, #2563eb 100%);
+            color: white;
+            border-bottom-left-radius: 1.5rem;
+            border-bottom-right-radius: 1.5rem;
+            box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            margin: -1rem -1rem 1.5rem -1rem; 
+            padding: 1rem 1.5rem;
+            animation: headerPopIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            transform-origin: top center;
         }
-        .nav-item.active {
-            color: #06b6d4; /* cyan-500 */
-            font-weight: 600;
+        @media (min-width: 768px) {
+             #topHeader { margin: -2rem -2rem 2rem -2rem; padding: 1.25rem 2rem; }
         }
-        .nav-item svg {
-            margin-bottom: 2px;
+        @keyframes headerPopIn {
+            0% { opacity: 0; transform: translateY(-20px) scale(0.95); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
         }
-        
-        /* Safe Area */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 10px 30px -5px rgba(6, 182, 212, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
         #bottomNav {
             padding-bottom: env(safe-area-inset-bottom);
+            position: fixed;
+            bottom: 1.5rem; 
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 400px;
+            height: auto;
+            border-radius: 1.5rem; 
+            z-index: 50;
+            display: none; 
+            padding: 0.5rem;
+            gap: 0.75rem;
         }
-        #mainAppContainer {
-             padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+        #bottomNav.flex { display: flex; }
+        .nav-item {
+            display: flex;
+            flex-direction: row; 
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            color: #64748b; 
+            width: 100%;
+            height: 3.5rem;
+            border-radius: 1rem; 
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); 
+            -webkit-tap-highlight-color: transparent;
+            font-weight: 600;
+            font-size: 0.95rem;
+            position: relative;
+            overflow: hidden;
+            background: transparent;
         }
+        .nav-item.active {
+            background: linear-gradient(135deg, #06b6d4 0%, #2563eb 100%);
+            color: white;
+            box-shadow: 0 6px 12px -2px rgba(6, 182, 212, 0.4), 0 3px 6px -3px rgba(37, 99, 235, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.4), inset 0 -2px 5px rgba(0, 0, 0, 0.1); 
+            transform: translateY(-4px) scale(1.02);
+        }
+        .nav-item.active svg {
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
+            transform: scale(1.1);
+            transition: transform 0.3s ease;
+        }
+        .nav-item:not(.active):active {
+            transform: scale(0.95);
+            background-color: #f1f5f9;
+        }
+        .nav-item svg { transition: all 0.3s ease; }
+        #mainAppContainer { padding-bottom: calc(7rem + env(safe-area-inset-bottom)); }
     </style>
 </head>
 <body class="bg-gradient-to-br from-cyan-50 to-blue-100 text-slate-800 flex flex-col items-center justify-center min-h-screen p-0 md:p-4">
@@ -254,11 +334,11 @@
         <form id="loginForm" class="space-y-4">
             <div>
                 <label for="username" class="block text-sm font-medium text-slate-600 mb-1">Username</label>
-                <input type="text" id="username" name="username" required class="w-full bg-slate-100 border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-cyan-500 outline-none transition duration-200">
+                <input type="text" id="username" name="username" required autocomplete="username" enterkeyhint="next" class="w-full bg-slate-100 border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-cyan-500 outline-none transition duration-200">
             </div>
             <div>
                 <label for="password" class="block text-sm font-medium text-slate-600 mb-1">Password</label>
-                <input type="password" id="password" name="password" required class="w-full bg-slate-100 border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-cyan-500 outline-none transition duration-200">
+                <input type="password" id="password" name="password" required autocomplete="current-password" enterkeyhint="go" class="w-full bg-slate-100 border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-cyan-500 outline-none transition duration-200">
             </div>
             <button id="loginBtn" type="submit" class="w-full bg-cyan-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-cyan-600 transition duration-300 flex items-center justify-center gap-2">
                 <svg id="login-spinner" class="w-5 h-5 hidden rotating" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -269,15 +349,15 @@
 
     <!-- Kontainer Aplikasi Utama -->
     <div id="mainAppContainer" class="w-full max-w-2xl bg-white rounded-none md:rounded-2xl shadow-none md:shadow-2xl md:shadow-blue-200/50 p-4 pb-24 md:p-8 space-y-6 hidden min-h-screen md:min-h-0">
-        <!-- Common Header -->
-        <div class="flex justify-between items-center border-b border-slate-200 pb-4">
+        <!-- Common Header (NEW 3D GRADIENT STYLE) -->
+        <div id="topHeader" class="flex justify-between items-center">
             <div class="text-left">
-                <h1 class="text-xl md:text-3xl font-bold text-slate-900">Scan Dispatch</h1>
-                <p class="text-slate-500 text-xs md:text-base mt-1">Resi keluar dari Gudang Depok.</p>
+                <h1 class="text-xl md:text-3xl font-bold text-white drop-shadow-sm">Scan Dispatch</h1>
+                <p class="text-blue-50 text-xs md:text-base mt-1 font-medium">Resi keluar dari Gudang Depok.</p>
             </div>
-            <div class="text-right bg-slate-50 border border-slate-200 rounded-lg p-2 md:p-3">
-                <span class="block text-xs md:text-sm text-slate-500">Halo, <strong id="loggedInUsername" class="text-slate-800"></strong>!</span>
-                <button id="logoutBtn" class="block text-xs md:text-sm text-cyan-600 hover:text-cyan-800 font-medium">Logout</button>
+            <div class="text-right bg-white/20 border border-white/30 rounded-xl p-2 md:p-3 shadow-lg backdrop-blur-md">
+                <span class="block text-xs md:text-sm text-blue-50">Halo, <strong id="loggedInUsername" class="text-white font-bold tracking-wide"></strong>!</span>
+                <button id="logoutBtn" class="block text-xs md:text-sm text-white bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg mt-1 transition-all shadow-sm font-semibold">Logout</button>
             </div>
         </div>
 
@@ -318,7 +398,7 @@
                             </div>
                             <div>
                                 <label for="sku" class="block text-sm font-medium text-slate-600 mb-1">Input SKU</label>
-                                <input type="text" id="sku" name="sku" required placeholder="SKU untuk batch ini" class="w-full bg-slate-100 border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-cyan-500 outline-none transition duration-200">
+                                <input type="text" id="sku" name="sku" required placeholder="SKU untuk batch ini" enterkeyhint="next" class="w-full bg-slate-100 border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-cyan-500 outline-none transition duration-200">
                             </div>
                         </div>
                     </div>
@@ -331,8 +411,8 @@
                         <div>
                             <label for="resi" class="block text-sm font-medium text-slate-600 mb-1">Scan Resi</label>
                             <form id="resiForm" class="flex items-center gap-2">
-                               <input type="text" id="resi" name="resi" placeholder="Ketik atau Scan..." class="w-full bg-slate-50 border-2 border-dashed border-cyan-400 rounded-lg px-4 py-3 text-center text-lg focus:ring-2 focus:ring-cyan-500 focus:border-solid focus:border-cyan-500 outline-none transition duration-200" autocomplete="off">
-                               <button id="scanBtn" type="button" title="Pindai dengan Kamera" class="p-3 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition">
+                               <input type="text" id="resi" name="resi" placeholder="Ketik atau Scan..." enterkeyhint="enter" class="w-full bg-slate-50 border-2 border-dashed border-cyan-400 rounded-lg px-4 py-3 text-center text-lg focus:ring-2 focus:ring-cyan-500 focus:border-solid focus:border-cyan-500 outline-none transition duration-200" autocomplete="off">
+                               <button id="scanBtn" type="button" title="Pindai dengan Kamera" class="p-3 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition active:scale-95">
                                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.776 48.776 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5h.008z" /></svg>
                                </button>
                             </form>
@@ -345,17 +425,14 @@
                         <span class="bg-cyan-100 text-cyan-800 text-xs font-bold px-2 py-1 rounded">3</span>
                         Daftar Antrian Resi (<span id="resi-count">0</span>)
                     </h2>
-                    <div id="resi-list" class="bg-slate-100 rounded-lg overflow-y-auto h-72 space-y-2 p-2">
+                    <div id="resi-list" class="bg-slate-100 rounded-lg overflow-y-auto h-72 space-y-2 p-2 shadow-inner">
                         <p id="initial-resi-message" class="text-slate-400 text-center italic p-4">Belum ada resi diantrikan.</p>
                     </div>
                      <!-- Tombol Aksi -->
                     <div class="mt-4 space-y-2">
-                         <button id="submitBtn" type="button" class="w-full bg-cyan-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-cyan-600 transition duration-300 flex items-center justify-center gap-2 disabled:bg-slate-300 disabled:cursor-not-allowed">
+                         <button id="submitBtn" type="button" class="w-full bg-cyan-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-cyan-600 transition duration-300 flex items-center justify-center gap-2 disabled:bg-slate-300 disabled:cursor-not-allowed shadow-md">
                              <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 8.25H7.5a2.25 2.25 0 00-2.25 2.25v9a2.25 2.25 0 002.25 2.25h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25H15m0-3l-3-3m0 0l-3 3m3-3v11.25" /></svg>
                             Simpan & Validasi Semua
-                        </button>
-                        <button id="testVersionBtn" type="button" class="w-full bg-yellow-400 text-yellow-900 font-bold py-2 px-4 rounded-lg hover:bg-yellow-500 transition duration-300 hidden">
-                            Test Versi Skrip (v5)
                         </button>
                         <button id="resetBtn" type="button" class="w-full bg-slate-200 text-slate-600 font-bold py-2 px-4 rounded-lg hover:bg-slate-300 transition duration-300">
                             Reset Batch
@@ -367,7 +444,7 @@
             <!-- Panel Admin (Included in Scan View) -->
             <div id="adminPanel" class="space-y-4 pt-4 border-t border-slate-200 hidden">
                 <h2 class="text-lg font-semibold text-cyan-600 flex items-center gap-2">
-                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.03m-.001-.03l-.001.03m0 0l.001.03m0 0l.001.03m0 0l.001.03m-3.742 0l.001.03m-.001-.03l-.001.03m0 0l.001.03m0 0l.001.03m0 0l.001.03m0 0l.001.03m0 0l.001.03m0 0l.001.03m0 0l.001.03M12 19.235M12 19.235M12 19.235M12 6c0-1.108.892-2 2-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM12 6c0-1.108-.892-2-2-2H8a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V6zM12 6c0-1.108.892-2 2-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM12 6c0-1.108-.892-2-2-2H8a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V6z" /></svg>
+                    <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.03m-.001-.03l-.001.03m0 0l.001.03m0 0l.001.03m-3.742 0l.001.03m-.001-.03l-.001.03m0 0l.001.03m0 0l.001.03m0 0l.001.03m0 0l.001.03m0 0l.001.03M12 19.235M12 19.235M12 19.235M12 6c0-1.108.892-2 2-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM12 6c0-1.108-.892-2-2-2H8a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V6zM12 6c0-1.108.892-2 2-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM12 6c0-1.108-.892-2-2-2H8a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V6z" /></svg>
                     Panel Admin: Daftarkan Pengguna Baru
                 </h2>
                 <div id="registerStatus" class="text-center p-3 rounded-lg text-sm font-medium transition-opacity duration-300 opacity-0"></div>
@@ -392,12 +469,14 @@
                     </button>
                 </form>
                 
-                <!-- Install App Button (Visible only if supported) -->
                 <button id="installAppBtn" class="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 transition duration-300 hidden mt-4 flex items-center justify-center gap-2">
                     <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
                     </svg>
                     Install Aplikasi
+                </button>
+                 <button id="testVersionBtn" type="button" class="w-full bg-yellow-400 text-yellow-900 font-bold py-2 px-4 rounded-lg hover:bg-yellow-500 transition duration-300 mt-2">
+                    Test Koneksi Server (v5)
                 </button>
             </div>
         </div>
@@ -484,18 +563,18 @@
     </div>
 
     <!-- Bottom Navigation Bar (Fixed Bottom) -->
-    <div id="bottomNav" class="fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 flex justify-around py-2 z-40 hidden shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+    <div id="bottomNav" class="glass-panel hidden flex justify-around py-2 z-40">
        <button id="nav-scan" class="nav-item active">
-           <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+           <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5zM13.5 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5z" />
             </svg>
-           <span class="text-xs">Scan</span>
+           <span class="text-sm tracking-wide">SCANNER</span>
        </button>
        <button id="nav-hasil" class="nav-item">
-           <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+           <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
             </svg>
-           <span class="text-xs">Hasil</span>
+           <span class="text-sm tracking-wide">HASIL</span>
        </button>
     </div>
 
@@ -533,10 +612,23 @@
     </div>
 
     <!-- Scanner Modal (FULL SCREEN) -->
-    <!-- PERBAIKAN: Menambahkan flex-col di sini, karena dihapus dari CSS -->
     <div id="scanner-container" class="fixed inset-0 bg-black hidden flex-col">
+        <!-- Frame Visual di Tengah Layar -->
         <!-- Floating Controls -->
         <div id="scan-feedback" class=""></div>
+        
+        <!-- Error Message Container (Baru) -->
+        <div id="scanner-error-container" class="hidden">
+            <svg class="mx-auto h-12 w-12 text-red-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+            <h3 class="text-lg font-bold text-gray-900 mb-1">Gagal Mengakses Kamera</h3>
+            <p id="scanner-error-msg" class="text-sm text-gray-600 mb-4">Pastikan Anda mengizinkan akses kamera.</p>
+            <button onclick="retryScanner()" class="bg-cyan-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-cyan-600 transition">
+                Coba Lagi
+            </button>
+        </div>
+
         <button id="flashBtn" class="hidden" title="Toggle Flash">
             <svg id="flash-icon-off" class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
@@ -562,7 +654,7 @@
     <script>
         const { jsPDF } = window.jspdf;
         
-        // !!! URL SCRIPT GOOGLE BARU !!!
+        // URL SCRIPT GOOGLE
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxw_2LOEEJ_FQe6A5yCFMd8nh6LDLYZhOdubVRkiBqKJvGaV51NLxDjDxMblhKCYuet/exec"; 
 
         // --- Global State ---
@@ -578,9 +670,9 @@
         let isScanCooldown = false; 
         let isPostSubmit = false; 
         let isScannerActiveBeforeModal = false;
-        let isScannerBusy = false; // NEW: Prevent race conditions
-        let deferredPrompt; // PWA install prompt
-        let lastBackPressTime = 0; // Untuk double press exit
+        let isScannerBusy = false; 
+        let deferredPrompt; 
+        let lastBackPressTime = 0; 
 
         // --- DOM Elements ---
         const loginContainer = document.getElementById('loginContainer');
@@ -641,6 +733,8 @@
         const flashIconOn = document.getElementById('flash-icon-on'); 
         const flashIconOff = document.getElementById('flash-icon-off'); 
         const installAppBtn = document.getElementById('installAppBtn');
+        const scannerErrorContainer = document.getElementById('scanner-error-container');
+        const scannerErrorMsg = document.getElementById('scanner-error-msg');
         
         // --- Navigation Elements ---
         const viewScan = document.getElementById('view-scan');
@@ -648,6 +742,26 @@
         const bottomNav = document.getElementById('bottomNav');
         const navScan = document.getElementById('nav-scan');
         const navHasil = document.getElementById('nav-hasil');
+
+        // --- Audio Unlock for Mobile ---
+        function initAudioContext() {
+            if (!audioCtx) {
+                try {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    audioCtx = new AudioContext();
+                } catch (e) {
+                    console.warn("Web Audio API not supported");
+                }
+            }
+            // Resume if suspended (common in mobile browsers)
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+        
+        // Attach listener to first user interaction
+        document.body.addEventListener('click', initAudioContext, { once: true });
+        document.body.addEventListener('touchstart', initAudioContext, { once: true });
 
         // --- PWA Installation Logic ---
         window.addEventListener('beforeinstallprompt', (e) => {
@@ -672,7 +786,6 @@
         });
 
         // --- Back Button Handling Logic ---
-        // Override default back behavior
         window.addEventListener('popstate', handlePopState);
 
         function handlePopState(event) {
@@ -681,37 +794,32 @@
             const isModalOpen = !duplicateModal.classList.contains('hidden') || !serverDuplicateModal.classList.contains('hidden');
 
             if (isScannerOpen) {
-                // Stop scanner, prevent exit
                 stopScanner();
-                history.pushState({ view: 'scan' }, '', ''); // Restore state to allow next back
+                history.pushState({ view: 'scan' }, '', ''); 
                 return;
             }
 
             if (isModalOpen) {
                 hideDuplicateModal();
                 hideServerDuplicateModal();
-                history.pushState({ view: 'scan' }, '', ''); // Restore state
+                history.pushState({ view: 'scan' }, '', ''); 
                 return;
             }
 
             // 2. Handle Tab Navigation (Hasil -> Scan)
             if (!viewHasil.classList.contains('hidden')) {
                 switchTab('scan');
-                history.pushState({ view: 'scan' }, '', ''); // Restore state
+                history.pushState({ view: 'scan' }, '', ''); 
                 return;
             }
 
             // 3. Root Logic (Tab Scan) - Double press to exit
             const now = new Date().getTime();
             if (now - lastBackPressTime < 2000) {
-                // User pressed back twice quickly.
-                // Allow normal back behavior (which exits the app/tab)
                 return; 
             } else {
-                // First press
                 lastBackPressTime = now;
                 showStatus("Tekan sekali lagi untuk keluar", "loading"); 
-                // Push state again to trap the user in the app
                 history.pushState({ view: 'scan' }, '', ''); 
             }
         }
@@ -776,6 +884,13 @@
         navScan.addEventListener('click', () => switchTab('scan'));
         navHasil.addEventListener('click', () => switchTab('hasil'));
 
+        // Fungsi Global untuk tombol Retry di HTML
+        window.retryScanner = function() {
+            scannerErrorContainer.classList.add('hidden');
+            isScannerBusy = false;
+            startScanner();
+        };
+
         function initializeApp() {
             populateEkspedisiFilter(); 
             const storedUser = localStorage.getItem('resiAppUser');
@@ -791,7 +906,8 @@
         function showMainApp() {
             loginContainer.classList.add('hidden');
             mainAppContainer.classList.remove('hidden');
-            bottomNav.classList.remove('hidden'); // Show nav
+            bottomNav.classList.remove('hidden');
+            bottomNav.classList.add('flex'); // Show nav
             loggedInUsernameEl.textContent = currentUser.username;
             if (currentUser.role === 'Admin') {
                 adminPanel.classList.remove('hidden');
@@ -813,7 +929,8 @@
 
         function showLoginApp() {
             mainAppContainer.classList.add('hidden');
-            bottomNav.classList.add('hidden'); // Hide nav
+            bottomNav.classList.add('hidden');
+            bottomNav.classList.remove('flex'); // Hide nav
             loginContainer.classList.remove('hidden');
         }
         
@@ -1024,163 +1141,235 @@
             return true; 
         }
         
+        function forceStopCameraStreams() {
+            // Function helper untuk mematikan semua track video aktif di halaman
+            // Ini untuk mengatasi NotReadableError yang bandel
+            const videos = document.querySelectorAll('video');
+            videos.forEach(video => {
+                if (video.srcObject) {
+                    const tracks = video.srcObject.getTracks();
+                    tracks.forEach(track => {
+                        track.stop();
+                        // Important: dispatch ended event to notify listeners
+                        try { video.srcObject.removeTrack(track); } catch(e) {}
+                    });
+                    video.srcObject = null;
+                }
+                // Paksa hapus dari DOM
+                video.src = "";
+                video.remove();
+            });
+        }
+
+        // --- SCANNER LOGIC (Fixed for Robustness) ---
         async function startScanner() {
             if (isScannerBusy) return;
             isScannerBusy = true;
+            scannerErrorContainer.classList.add('hidden');
+            initAudioContext(); // Make sure audio is ready
 
-            if (!audioCtx) {
-                try {
-                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                } catch (e) {
-                    console.error("Web Audio API tidak didukung browser ini.");
-                }
-            }
             scannerContainer.classList.remove('hidden');
             scannerContainer.classList.add('flex');
             
-            // CLEANUP PREVIOUS INSTANCE ROBUSTLY
+            // 1. Force Stop Manual Streams First
+            forceStopCameraStreams();
+
+            // 2. Cleanup Library Instance
             if (html5QrCode) {
                 try {
-                    await html5QrCode.stop().catch(err => {
-                        console.log("Stop failed or not running:", err);
-                    });
-                    html5QrCode.clear();
+                     if (html5QrCode.isScanning) {
+                        await html5QrCode.stop().catch(e => console.log("Stop ignored:", e));
+                     }
+                     await html5QrCode.clear();
                 } catch (e) {
-                    console.warn("Warning clearing previous instance:", e);
+                    console.log("Cleanup warning", e);
                 }
                 html5QrCode = null;
             }
             
-            // Add a delay to allow OS to release camera handle completely
-            await new Promise(r => setTimeout(r, 500));
+            // 3. Clear DOM Container manually to be sure
+            document.getElementById('reader').innerHTML = '';
 
-            try {
-                html5QrCode = new Html5Qrcode("reader");
-            } catch (e) {
-                showStatus("Gagal inisialisasi library scanner.", "error");
-                isScannerBusy = false;
-                stopScanner();
-                return;
-            }
-            
+            // 4. Wait for OS to release camera (Increased delay)
+            await new Promise(r => setTimeout(r, 1000));
+
             const qrCodeSuccessCallback = (decodedText, decodedResult) => {
-                if (isScanCooldown) {
-                    return; 
-                }
+                if (isScanCooldown) return;
                 
-                if(decodedText.length < 5) {
-                     return; 
-                }
+                if(decodedText.length < 5) return; 
 
                 const isNew = addResiToBatch(decodedText); 
                 if (isNew) {
                     isScanCooldown = true;
-                    setTimeout(() => { isScanCooldown = false; }, 1000); 
+                    setTimeout(() => { isScanCooldown = false; }, 1200); 
                     playBeep();
                     showScanFeedback(`Sukses: ${decodedText}`, 'success');
                 } else {
                     isScanCooldown = true;
-                    setTimeout(() => { isScanCooldown = false; }, 1000); 
+                    setTimeout(() => { isScanCooldown = false; }, 1200); 
                     playErrorBeep();
                 }
             };
 
             const config = { 
-                fps: 20, 
-                // KOTAK SCAN PERSEGI AGAR QR & CODE 128 MASUK
+                fps: 20, // Keep 20 for responsiveness
+                // KOTAK SCAN LEBIH LEBAR
                 qrbox: function(viewfinderWidth, viewfinderHeight) {
-                    // Lebar 80% dari layar
-                    let boxSize = Math.floor(viewfinderWidth * 0.8);
-                    return {
-                        width: boxSize,
-                        height: boxSize // Persegi
-                    };
+                    let width = Math.floor(viewfinderWidth * 0.9); // Lebar 90%
+                    let height = Math.floor(viewfinderHeight * 0.3); // Tinggi 30% -> Persegi panjang
+                    return { width: width, height: height };
                 },
                 formatsToSupport: [ 
                     Html5QrcodeSupportedFormats.CODE_128, 
                     Html5QrcodeSupportedFormats.QR_CODE
                 ],
+                // Aktifkan kembali experimental features jika didukung
                 experimentalFeatures: {
-                    useBarCodeDetectorIfSupported: false 
-                }
+                    useBarCodeDetectorIfSupported: true 
+                },
+                aspectRatio: 1.0 
             };
             
-            const cameraConfig = { 
-                facingMode: "environment"
-            };
+            // Default Config (Let browser choose best environment cam)
+            const defaultCameraConfig = { facingMode: "environment" };
 
-            // Wrap start in a retry function
             const attemptStart = async (retryCount = 0) => {
+                // Re-initialize instance if null
+                if (!html5QrCode) {
+                     try {
+                        html5QrCode = new Html5Qrcode("reader");
+                    } catch (e) {
+                        showScannerError("Gagal inisialisasi library scanner.");
+                        isScannerBusy = false;
+                        return;
+                    }
+                }
+
                 try {
-                    await html5QrCode.start(cameraConfig, config, qrCodeSuccessCallback);
+                    // Fallback Strategy: If retrying (retryCount > 0), try forcing specific camera ID if available
+                    // This bypasses generic "facingMode" issues on Android
+                    let useConfig = defaultCameraConfig;
                     
+                    if (retryCount > 0) {
+                        try {
+                            const devices = await Html5Qrcode.getCameras();
+                            if (devices && devices.length) {
+                                // Try to find a back camera
+                                const backCamera = devices.find(device => device.label.toLowerCase().includes('back') || device.label.toLowerCase().includes('rear'));
+                                if (backCamera) {
+                                    useConfig = { deviceId: { exact: backCamera.id } };
+                                    console.log("Retrying with specific camera ID:", backCamera.label);
+                                }
+                            }
+                        } catch(e) { console.log("Camera list fetch failed", e); }
+                    }
+
+                    await html5QrCode.start(useConfig, config, qrCodeSuccessCallback);
+                    
+                    // POST-START OPTIMIZATION: KUALITAS GAMBAR
                     try {
                         const track = html5QrCode.getRunningTrack();
                         if (track) {
                             const capabilities = track.getCapabilities();
+                            const constraints = {};
+                            
                             if (capabilities.torch) {
-                                flashBtn.classList.remove('hidden'); 
-                            } else {
-                                flashBtn.classList.add('hidden'); 
+                                flashBtn.classList.remove('hidden');
+                            }
+                            
+                            // FORCE HIGH RESOLUTION (HD/FULL HD)
+                            if (capabilities.width && capabilities.height) {
+                                constraints.width = { ideal: 1280 }; // 720p HD Ideal
+                                constraints.height = { ideal: 720 };
+                            }
+
+                            // FORCE CONTINUOUS FOCUS
+                            if (capabilities.focusMode && capabilities.focusMode.includes('continuous')) {
+                                if (!constraints.advanced) constraints.advanced = [];
+                                constraints.advanced.push({ focusMode: "continuous" });
+                            }
+
+                            if (Object.keys(constraints).length > 0) {
+                                await track.applyConstraints(constraints)
+                                    .catch(e => console.log("Focus upgrade failed (non-fatal):", e));
                             }
                         }
-                    } catch (e) {
-                        flashBtn.classList.add('hidden'); 
+                    } catch(e) {
+                        console.log("Optimization warning:", e);
                     }
-                    isFlashOn = false;
-                    flashBtn.classList.remove('flash-on');
-                    flashIconOn.classList.add('hidden');
-                    flashIconOff.classList.remove('hidden');
+                    
                     isScannerBusy = false;
 
                 } catch (err) {
-                    console.error(`Attempt ${retryCount + 1} failed:`, err);
-                    
-                    const errName = err?.name || "Unknown";
-                    const errMsg = err?.message || String(err);
-                    
-                    if ((errName === 'NotReadableError' || errMsg.includes('NotReadableError') || errMsg.includes('Could not start video source')) && retryCount < 2) {
-                        console.log("Camera busy, retrying in 1s...");
-                        showStatus(`Kamera sibuk, mencoba lagi (${retryCount + 1}/3)...`, "loading");
-                        await new Promise(r => setTimeout(r, 1000));
-                        await attemptStart(retryCount + 1);
-                        return;
+                    console.error(`Start attempt ${retryCount} failed:`, err);
+
+                    if ((err.name === 'NotReadableError' || err.message?.includes('NotReadableError')) && retryCount < 2) {
+                        showStatus(`Kamera sibuk, reset... (${retryCount + 1}/3)`, "loading");
+                        
+                        forceStopCameraStreams(); 
+
+                        if (html5QrCode) {
+                            try { await html5QrCode.clear(); } catch(e) {}
+                            html5QrCode = null;
+                        }
+
+                        await new Promise(r => setTimeout(r, 2500)); // Wait even longer (2.5s)
+                        
+                        if (scannerContainer.classList.contains('hidden')) {
+                            console.log("Scanner closed by user during retry.");
+                            isScannerBusy = false;
+                            return;
+                        }
+
+                        return attemptStart(retryCount + 1);
                     }
 
-                    let errorMsg = "Tidak dapat mengakses kamera.";
-                    if (errName === 'NotReadableError' || errMsg.includes('NotReadableError')) {
-                        errorMsg = "Kamera tidak dapat diakses. Pastikan tidak ada aplikasi lain yang menggunakan kamera, lalu coba lagi.";
-                    } else if (errName === 'NotAllowedError' || errMsg.includes('Permission')) {
-                        errorMsg = "Izin kamera ditolak. Mohon izinkan akses kamera di pengaturan browser.";
+                    let errorText = "Gagal akses kamera.";
+                    if (err.name === 'NotAllowedError') {
+                        errorText = "Izin kamera ditolak. Silakan izinkan di pengaturan.";
+                    } else if (err.name === 'NotFoundError') {
+                        errorText = "Kamera tidak ditemukan.";
+                    } else if (err.name === 'NotReadableError') {
+                        errorText = "Kamera sedang digunakan aplikasi lain.";
+                    } else if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+                        errorText = "Kamera butuh koneksi HTTPS.";
                     }
-                    
-                    showStatus(errorMsg, "error");
+
+                    showScannerError(errorText);
                     isScannerBusy = false;
-                    stopScanner();
                 }
             };
 
             attemptStart();
         }
 
+        // Fungsi baru untuk menampilkan error di dalam modal scanner
+        function showScannerError(msg) {
+            scannerErrorMsg.textContent = msg;
+            scannerErrorContainer.classList.remove('hidden');
+        }
+
         async function stopScanner() {
             if (html5QrCode) {
                 try {
-                    if (isFlashOn) {
-                        await toggleFlash(true).catch(() => {}); 
+                    if (isFlashOn) { await toggleFlash(true).catch(() => {}); }
+                    
+                    if(html5QrCode.isScanning) {
+                         await html5QrCode.stop().catch(err => {
+                            console.warn("Stop warning:", err);
+                        });
                     }
                     
-                    await html5QrCode.stop().catch(e => console.log("Stop ignored:", e));
-                    html5QrCode.clear();
+                    await html5QrCode.clear();
                 } catch (err) {
-                    console.error("Gagal saat stop scanner:", err);
-                } finally {
-                    html5QrCode = null;
-                    isScannerBusy = false;
+                    console.warn("Stop routine warning:", err); 
                 }
+                html5QrCode = null;
             }
             scannerContainer.classList.add('hidden');
             scannerContainer.classList.remove('flex');
+            scannerErrorContainer.classList.add('hidden'); 
+            isScannerBusy = false;
         }
 
         async function toggleFlash(forceOff = false) {
@@ -1192,12 +1381,6 @@
             }
             try {
                 const track = html5QrCode.getRunningTrack();
-                const capabilities = track.getCapabilities();
-                if (!capabilities.torch) {
-                    console.warn("Perangkat ini tidak punya flash.");
-                    flashBtn.classList.add('hidden');
-                    return;
-                }
                 await track.applyConstraints({
                     advanced: [{ torch: isFlashOn }]
                 });
@@ -1211,11 +1394,7 @@
                     flashIconOff.classList.remove('hidden');
                 }
             } catch (err) {
-                console.error("Gagal toggle flash:", err);
-                isFlashOn = false; 
-                flashBtn.classList.remove('flash-on');
-                flashIconOn.classList.add('hidden');
-                flashIconOff.classList.remove('hidden');
+                console.error("Flash error:", err);
             }
         }
 
@@ -1232,7 +1411,7 @@
             modalContent.classList.remove('modal-leave');
             modalContent.classList.add('modal-enter');
             if (modalCloseTimer) clearTimeout(modalCloseTimer);
-            modalCloseTimer = setTimeout(hideDuplicateModal, 1000);
+            modalCloseTimer = setTimeout(hideDuplicateModal, 1500); // Sedikit lebih lama agar terbaca
         }
 
         function hideDuplicateModal() {
@@ -1339,9 +1518,10 @@
             }
             const tag = document.createElement('div');
             tag.id = `queue-item-${resi}`;
-            tag.className = 'tag-item bg-cyan-100 text-cyan-800 font-medium rounded group';
+            tag.className = 'tag-item bg-cyan-100 text-cyan-800 font-medium rounded group flex items-center p-1 px-2';
             const span = document.createElement('span');
             span.textContent = resi; 
+            span.className = 'mr-2';
             const button = document.createElement('button');
             button.type = 'button';
             button.className = 'text-cyan-600 hover:text-red-500 transition-colors duration-200';
@@ -1481,20 +1661,15 @@
                     let statusMessage = `Selesai: ${processed.length} resi tersimpan, ${duplicates.length} duplikat.`;
                     let statusType = duplicates.length > 0 ? "error" : "success"; 
 
-                    // 2. Update Summary Card
                     batchSummaryCard.classList.remove('hidden');
                     summaryBatchEl.textContent = processed.length;
                     
-                    // 3. Reset Scan Batch
                     resetBatch(true, true); 
 
-                    // 4. SWITCH TAB IMMEDIATELY
                     switchTab('hasil');
                     
-                    // 5. Show Status Message
                     showStatus(statusMessage, statusType);
 
-                    // 6. Refresh Data in Background
                     isPostSubmit = true; 
                     
                     logTableBodyEl.innerHTML = `<tr id="initial-log-message"><td colspan="5" class="text-center text-slate-400 italic py-4">Memuat ulang data terbaru...</td></tr>`;
@@ -1601,22 +1776,6 @@
                 default: return `<span class="font-semibold text-slate-500">${status || "N/A"}</span>`;
             }
         }
-        
-        function formatSortedSku(sku) {
-            if (!sku || typeof sku !== 'string') {
-                return '-';
-            }
-            try {
-                const components = sku.match(/[A-Z]+[0-9]*/g);
-                if (!components) {
-                    return sku; 
-                }
-                return components.sort().join('');
-            } catch (e) {
-                console.error("Error sorting SKU:", e);
-                return sku;
-            }
-        }
 
         function addToScanResults(ekspedisi, resi, sku, pic, status) {
              const initialMsg = document.getElementById('initial-log-message');
@@ -1649,11 +1808,6 @@
             const cellPic = newRow.insertCell(4);
             cellPic.className = 'px-2 py-2 text-slate-600 font-medium';
             cellPic.textContent = pic; 
-        }
-        
-        function handleBackButton(event) {
-            resiEl.focus();
-            history.pushState(null, '', location.href);
         }
 
         function populateEkspedisiFilter() {
@@ -2083,7 +2237,63 @@
         }
         
         document.addEventListener('DOMContentLoaded', initializeApp);
-        
+
+    </script>
+
+    <!-- SERVICE WORKER (PWA) -->
+    <!-- Script ini wajib diletakkan di paling bawah agar aplikasi bisa diinstal (PWA) -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            // Menggunakan Blob untuk membuat Service Worker dalam satu file (Single File PWA)
+            const swCode = `
+                const CACHE_NAME = 'dispatch-nashir-v1';
+                const urlsToCache = [
+                    './',
+                    'https://cdn.tailwindcss.com',
+                    'https://unpkg.com/html5-qrcode',
+                    'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
+                    'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+                    'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js'
+                ];
+
+                self.addEventListener('install', event => {
+                    self.skipWaiting();
+                    event.waitUntil(
+                        caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+                    );
+                });
+
+                self.addEventListener('activate', event => {
+                    event.waitUntil(self.clients.claim());
+                });
+
+                self.addEventListener('fetch', event => {
+                    // Network First Strategy
+                    // Mengutamakan data terbaru dari internet, fallback ke cache jika offline
+                    event.respondWith(
+                        fetch(event.request).catch(() => {
+                            return caches.match(event.request);
+                        })
+                    );
+                });
+            `;
+
+            try {
+                const blob = new Blob([swCode], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register(swUrl)
+                        .then(reg => console.log('Service Worker Registered! Scope:', reg.scope))
+                        .catch(err => {
+                            // Error handling yang lebih lembut agar tidak mengganggu user
+                            console.warn('Info PWA: Service Worker mode Blob tidak didukung penuh oleh browser ini. Aplikasi tetap berjalan normal secara online.', err);
+                        });
+                });
+            } catch (e) {
+                console.warn('PWA initialization skipped due to security restrictions.');
+            }
+        }
     </script>
 </body>
 </html>
